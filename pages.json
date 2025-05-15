@@ -1,0 +1,274 @@
+{
+	"pages": [{
+		"path": "pages/index/index",
+		"style": {
+			"navigationBarTitleText": "妙记",
+			"enablePullDownRefresh": false
+		}
+	}, {
+		"path": "pages/bills/bills",
+		"style": {
+			"navigationBarTitleText": "账单",
+			"enablePullDownRefresh": false
+		}
+
+	}, {
+		"path": "pages/charts/charts",
+		"style": {
+			"navigationBarTitleText": "报表",
+			"enablePullDownRefresh": false
+		}
+
+	}, {
+		"path": "pages/my/my",
+		"style": {
+			"navigationBarTitleText": "我的",
+			"enablePullDownRefresh": false
+		}
+	},{
+    "path": "uni_modules/uni-id-pages/pages/register/register",
+    "style": {
+        "navigationBarTitleText": "注册"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/login/login-withoutpwd",
+    "style": {
+        "navigationBarTitleText": "登录"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/login/login-smscode",
+    "style": {
+        "navigationBarTitleText": "手机验证码登录"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/login/login-withpwd",
+    "style": {
+        "navigationBarTitleText": "账号密码登录",
+        "enablePullDownRefresh": false
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/userinfo/userinfo",
+    "style": {
+        "navigationBarTitleText": "个人资料"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/userinfo/bind-mobile/bind-mobile",
+    "style": {
+        "navigationBarTitleText": "绑定手机号码"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/userinfo/cropImage/cropImage",
+    "style": {
+        "navigationBarTitleText": ""
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/register/register-by-email",
+    "style": {
+        "navigationBarTitleText": "邮箱验证码注册"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/retrieve/retrieve",
+    "style": {
+        "navigationBarTitleText": "重置密码"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/retrieve/retrieve-by-email",
+    "style": {
+        "navigationBarTitleText": "通过邮箱重置密码"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/common/webview/webview",
+    "style": {
+        "enablePullDownRefresh": false,
+        "navigationBarTitleText": ""
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/userinfo/change_pwd/change_pwd",
+    "style": {
+        "enablePullDownRefresh": false,
+        "navigationBarTitleText": "修改密码"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/register/register-admin",
+    "style": {
+        "enablePullDownRefresh": false,
+        "navigationBarTitleText": "注册管理员账号"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/userinfo/set-pwd/set-pwd",
+    "style": {
+        "enablePullDownRefresh": false,
+        "navigationBarTitleText": "设置密码"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/userinfo/deactivate/deactivate",
+    "style": {
+        "navigationBarTitleText": "注销账号"
+    }
+},{
+    "path": "uni_modules/uni-id-pages/pages/userinfo/realname-verify/realname-verify",
+    "style": {
+        "enablePullDownRefresh": false,
+        "navigationBarTitleText": "实名认证"
+    }
+}],
+	"subPackages": [{
+			"root": "pagesAccount",
+			"pages": [{
+				"path": "make-an-account/make-an-account",
+				"style": {
+					"navigationBarTitleText": "记一笔",
+					"enablePullDownRefresh": false
+				}
+			}, {
+				"path": "make-an-asset/make-an-asset",
+				"style": {
+					"navigationBarTitleText": "添加资产",
+					"enablePullDownRefresh": false
+				}
+
+			}, {
+				"path": "set-asset/set-asset",
+				"style": {
+					"navigationBarTitleText": "配置资产",
+					"enablePullDownRefresh": false
+				}
+
+			}]
+		}, {
+			"root": "pagesMy",
+			"pages": [{
+					"path": "user-info/user-info",
+					"style": {
+						"navigationBarTitleText": "我的",
+						"enablePullDownRefresh": false
+					}
+
+				}, {
+					"path": "feedback/feedback",
+					"style": {
+						"navigationBarTitleText": "反馈",
+						"enablePullDownRefresh": false
+					}
+
+				}, {
+					"path": "about/about",
+					"style": {
+						"navigationBarTitleText": "关于",
+						"enablePullDownRefresh": false
+					}
+
+				}, {
+					"path": "my-assets/my-assets",
+					"style": {
+						"navigationBarTitleText": "我的资产",
+						"enablePullDownRefresh": false
+					}
+
+				}, {
+					"path": "bill-template/bill-template",
+					"style": {
+						"navigationBarTitleText": "我的模板",
+						"enablePullDownRefresh": false
+					}
+
+				},
+				{
+					"path": "seconds/seconds",
+					"style": {
+						"navigationBarTitleText": "秒记管理",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "cron-accounting/cron-accounting",
+					"style": {
+						"navigationBarTitleText": "定时记账",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "cron-accounting-edit/cron-accounting-edit",
+					"style": {
+						"navigationBarTitleText": "编辑任务",
+						"enablePullDownRefresh": false
+					}
+				}
+			]
+		}, {
+			"root": "pagesFilter",
+			"pages": [{
+				"path": "filter-bills/filter-bills",
+				"style": {
+					"navigationBarTitleText": "筛选",
+					"enablePullDownRefresh": false
+				}
+			}]
+		}
+	],
+	"preloadRule": {
+		"pages/index/index": {
+			"network": "all",
+			"packages": ["pagesAccount"]
+		},
+		"pages/my/my": {
+			"network": "all",
+			"packages": ["pagesMy"]
+		},
+		"pages/bills/bills": {
+			"network": "all",
+			"packages": ["pagesFilter"]
+		},
+		"pages/charts/charts": {
+			"network": "all",
+			"packages": ["pagesFilter"]
+		}
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "妙记",
+		"navigationBarBackgroundColor": "#9fcba7",
+		"backgroundColor": "#9fcba7",
+		"backgroundTextStyle": "light"
+	},
+	"tabBar": {
+		"color": "#c9c9c9",
+		"selectedColor": "#65915b",
+		"backgroundColor": "#fafafa",
+		"borderStyle": "white",
+		"list": [{
+				"pagePath": "pages/index/index",
+				"text": "主页",
+				"iconPath": "static/icons/home.png",
+				"selectedIconPath": "static/icons/home-selected.png"
+			},
+			{
+				"pagePath": "pages/bills/bills",
+				"text": "账单",
+				"iconPath": "static/icons/money-collect.png",
+				"selectedIconPath": "static/icons/money-collect-selected.png"
+			},
+			{
+				"pagePath": "pages/charts/charts",
+				"text": "图表",
+				"iconPath": "static/icons/pie-chart.png",
+				"selectedIconPath": "static/icons/pie-chart-selected.png"
+			},
+			{
+				"pagePath": "pages/my/my",
+				"text": "我的",
+				"iconPath": "static/icons/user.png",
+				"selectedIconPath": "static/icons/user-selected.png"
+			}
+		]
+	},
+	"uniIdRouter": {
+		"loginPage": "uni_modules/uni-id-pages/pages/login/login-withpwd",
+		"needLogin": [
+			"pagesMy/.*",
+			"pagesAccount/.*",
+			"pagesFilter/.*"
+		],
+		"resToLogin": true
+	}
+}

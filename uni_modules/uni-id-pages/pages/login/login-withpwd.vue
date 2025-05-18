@@ -232,18 +232,21 @@
 
 <style lang="scss" scoped>
 	@import "@/uni_modules/uni-id-pages/common/login-page.scss";
-
+	/* 5.18 改进登录页面样式 */
 	.uni-content {
 		width: 750rpx;
-		height: 100vh;
+		min-height: 100vh;  /* 最小高度100vh */	
 		padding: 0;
+		margin-left: auto; /* 自动居中 */
+		margin-right: auto; /* 自动居中 */
 		.flex-box {
-			width: 750rpx;
-			height: 100vh;
+			width: 100%; /* 宽度100% */
+			min-height: 100vh; /* 最小高度100vh */
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
+			box-sizing: border-box;
 		}
 	}
 	

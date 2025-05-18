@@ -27,7 +27,7 @@
 							<view class="money" v-if="bill.bill_type === 2">
 								<u--text mode="price" :text="(bill.transfer_amount / 100)" color="#212121" size="32rpx" bold></u--text>
 							</view>
-							<view class="minor">{{bill.asset_id[0].asset_name ? bill.asset_id[0].asset_name : bill.assetStyle.title}}</view>
+							<view class="minor">{{ bill.asset_id && bill.asset_id[0] && bill.asset_id[0].asset_name ? bill.asset_id[0].asset_name : (bill.assetStyle ? bill.assetStyle.title : '未知资产') }}</view>
 						</view>
 					</view>
 					<view class="line" v-if="index != userBills.length - 1">
@@ -227,7 +227,13 @@
 					})
 					// 通过asset_id.asset_type给每一条添加对应的assetStyle
 					this.userBills.forEach(bill => {
-						bill.assetStyle = this.assetsStyle.find(item => item.type === bill.asset_id[0]?.asset_type)  // 如果账单对应的资产被用户删除，则不赋值
+						// 更加安全的访问
+						const assetType = bill.asset_id && bill.asset_id[0] ? bill.asset_id[0].asset_type : undefined;
+						if (assetType) {
+							bill.assetStyle = this.assetsStyle.find(item => item.type === assetType);
+						} else {
+							bill.assetStyle = null; // 或者一个默认的 assetStyle 对象
+						}
 					})
 					this.setToday()
 					// console.log('监听userBillsFromDB，赋值userbills',this.userBills );

@@ -79,7 +79,7 @@
 				// #ifdef MP-HARMONY
 					return uni.showModal({
 						title: "提示",
-						content: `请先阅读并同意${this.agreements.map(item=>`“${item.title}”`).join('和')}`,
+						content: `请先阅读并同意${this.agreements.map(item=>`"${item.title}"`).join('和')}`,
 					})
 				// #endif
 				// #ifndef MP-HARMONY
@@ -95,12 +95,30 @@
 				url,
 				title
 			}) {
-				uni.navigateTo({
-					url: '/uni_modules/uni-id-pages/pages/common/webview/webview?url=' + url + '&title=' + title,
-					success: res => {},
-					fail: () => {},
-					complete: () => {}
-				});
+				// 检查url是否是外部链接
+				if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+					// 如果是外部链接，则通过webview打开
+					uni.navigateTo({
+						url: '/uni_modules/uni-id-pages/pages/common/webview/webview?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title),
+					});
+				} else if (url && url.startsWith('/')) {
+					// 如果是内部页面路径 (以 / 开头)，则直接跳转到该页面
+					uni.navigateTo({
+						url: url, // 直接使用/pages/common/service-agreement 等路径
+						// success: () => {
+						// 	// 如果页面跳转成功后，还需要设置标题，可以在这里进行，
+						// 	// 但页面自身在 onLoad 中设置标题更常见。
+						// 	// uni.setNavigationBarTitle({ title: title }); 
+						// }
+					});
+				} else {
+					// 如果URL既不是外部链接也不是有效的内部路径，可以给个提示或者不执行任何操作
+					console.warn('无效的协议链接:', url);
+					uni.showToast({
+						title: '协议链接无效',
+						icon: 'none'
+					});
+				}
 			},
 			hasAnd(agreements, index) {
 				return agreements.length - 1 > index

@@ -6,19 +6,17 @@
 			"enablePullDownRefresh": false
 		}
 	}, {
-		"path": "pages/bills/bills",
-		"style": {
-			"navigationBarTitleText": "账单",
-			"enablePullDownRefresh": false
-		}
-
-	}, {
 		"path": "pages/charts/charts",
 		"style": {
 			"navigationBarTitleText": "报表",
 			"enablePullDownRefresh": false
 		}
-
+	}, {
+		"path": "pages/finance/finance",
+		"style": {
+			"navigationBarTitleText": "理财",
+			"enablePullDownRefresh": false
+		}
 	}, {
 		"path": "pages/my/my",
 		"style": {
@@ -227,13 +225,13 @@
 			"network": "all",
 			"packages": ["pagesMy"]
 		},
-		"pages/bills/bills": {
-			"network": "all",
-			"packages": ["pagesFilter"]
-		},
 		"pages/charts/charts": {
 			"network": "all",
 			"packages": ["pagesFilter"]
+		},
+		"pages/finance/finance": {
+			"network": "all",
+			"packages": []
 		}
 	},
 	"globalStyle": {
@@ -255,16 +253,16 @@
 				"selectedIconPath": "static/icons/home-selected.png"
 			},
 			{
-				"pagePath": "pages/bills/bills",
-				"text": "账单",
-				"iconPath": "static/icons/money-collect.png",
-				"selectedIconPath": "static/icons/money-collect-selected.png"
-			},
-			{
 				"pagePath": "pages/charts/charts",
 				"text": "图表",
 				"iconPath": "static/icons/pie-chart.png",
 				"selectedIconPath": "static/icons/pie-chart-selected.png"
+			},
+			{
+				"pagePath": "pages/finance/finance",
+				"text": "理财",
+				"iconPath": "static/icons/finance.png",
+				"selectedIconPath": "static/icons/finance-selected.png"
 			},
 			{
 				"pagePath": "pages/my/my",

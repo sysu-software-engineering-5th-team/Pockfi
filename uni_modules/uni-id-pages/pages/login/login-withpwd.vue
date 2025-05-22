@@ -39,17 +39,31 @@
 				<view class="line"></view>
 			</view>
 			
-			<!-- 手机验证码登录按钮 -->
+			<!-- 其他登录方式图标按钮 -->
 			<view class="link-box login-type-box">
+				<!-- 短信验证码登录 -->
 				<view @click="toSmsLogin" class="login-type-item">
-					<u-icon name="phone" size="20" color="#999"></u-icon>
-					<text class="login-type-text">手机号登录</text>
+					<u-icon name="chat" size="20" color="#999"></u-icon>
+					<text class="login-type-text">短信验证码</text>
 				</view>
+				
+				<!-- 微信登录 -->
+				<!-- #if MP-WEIXIN || APP-PLUS -->
+				<view @click="loginByWeixin" class="login-type-item">
+					<u-icon name="weixin-fill" size="20" color="#52b838"></u-icon>
+					<text class="login-type-text">微信登录</text>
+				</view>
+				<!-- #endif -->
+
+				<!-- 一键登录 -->
+				<!-- #ifdef APP-PLUS -->
+				<view @click="loginByUniverify" class="login-type-item">
+					<u-icon name="fingerprint" size="20" color="#999"></u-icon> <!-- 使用 fingerprint 作为示意图标 -->
+					<text class="login-type-text">一键登录</text>
+				</view>
+				<!-- #endif -->
 			</view>
 		</div>
-		
-		<!-- 悬浮登录方式组件 -->
-		<uni-id-pages-fab-login ref="uniFabLogin"></uni-id-pages-fab-login>
 		
 		<!-- 用户隐私授权popup -->
 		<u-popup :show="showPrivacyAuthorize" round="20px" mode="center" :closeOnClickOverlay="false" :safeAreaInsetBottom="false">
@@ -225,6 +239,95 @@
 						console.error(e);
 					}
 				})
+			},
+			async loginByWeixin() {
+				// #ifdef MP-WEIXIN
+				if (!this.allowLogin) {
+					this.showPrivacyAuthorize = true;
+					return;
+				}
+				try {
+					const loginRes = await uni.login({ provider: 'weixin' });
+					if (loginRes.errMsg === 'login:ok') {
+						const code = loginRes.code;
+						const res = await uniIdCo.loginByWeixin({ code });
+						this.loginSuccess(res);
+					} else {
+						uni.showToast({ title: '微信登录获取code失败: ' + loginRes.errMsg, icon: 'none' });
+					}
+				} catch (err) {
+					console.error('微信登录失败', err);
+					uni.showToast({ title: '微信登录失败', icon: 'none' });
+				}
+				// #endif
+				// #ifdef APP-PLUS
+				// App端的微信登录逻辑
+				if (!this.allowLogin) {
+					this.showPrivacyAuthorize = true;
+					return;
+				}
+				uni.showLoading({mask:true,title:'请稍候'})
+				try {
+					const providers = await uni.getProvider({service: 'oauth'});
+					if (providers.provider.indexOf('weixin') === -1) {
+						uni.showToast({title: '当前环境不支持微信登录',icon: 'none'});
+						uni.hideLoading();
+						return;
+					}
+					const loginRes = await uni.login({provider: 'weixin'});
+					// console.log('App微信登录 loginRes:', loginRes);
+					// loginRes.authResult 包含 openid, access_token 等
+					const res = await uniIdCo.loginByAppWeixin(loginRes.authResult);
+					this.loginSuccess(res);
+				} catch (err) {
+					console.error('App微信登录失败', err);
+					let errMsg = err.errMsg || err.message || '微信登录失败';
+					if(err.code === 1000){ // 用户取消授权
+						errMsg = '您已取消微信登录';
+					}
+					uni.showToast({ title: errMsg, icon: 'none' });
+				} finally {
+					uni.hideLoading();
+				}
+				// #endif
+			},
+			async loginByUniverify() {
+				// #ifdef APP-PLUS
+				if (!this.allowLogin) {
+					this.showPrivacyAuthorize = true;
+					return;
+				}
+				uni.showLoading({mask:true,title:'请稍候'})
+				try {
+					const loginRes = await uni.login({ provider: 'univerify' });
+					if (loginRes.errMsg === 'login:ok') {
+						const res = await uniIdCo.loginByUniverify(loginRes.authResult);
+						this.loginSuccess(res);
+					} else {
+						// https://uniapp.dcloud.net.cn/api/plugins/login.html#showuniverifytooltip
+						// uni.showUniverifyTooltip(true) // 根据情况显示提示，引导用户进行相关操作
+						uni.showToast({ title: '一键登录获取参数失败: ' + loginRes.errMsg, icon: 'none', duration: 3000 });
+					}
+				} catch (err) {
+					console.error('一键登录失败', err);
+					// uni-id-pages 对于错误的细化处理可参考：
+					// uni_modules/uni-id-pages/uniCloud/common/uni-id-pages/uni-id-pages.js.page.js login_by_univerify 部分
+					let errMsg = '一键登录失败';
+					if (err.code === '30002' || err.code === '30001') { // 无 SIM 卡或未开启数据网络
+						errMsg = '请检查SIM卡并开启数据网络';
+					} else if (err.code === '30004') { // 预登录失败
+						errMsg = '预登录失败，请稍后重试';
+					} else if (err.code === '30005') { // 用户取消
+						errMsg = '您已取消一键登录';
+					}
+					uni.showToast({ title: errMsg, icon: 'none', duration: 3000 });
+				} finally {
+					uni.hideLoading();
+				}
+				// #endif
+				// #ifndef APP-PLUS
+				uni.showToast({ title: '一键登录仅支持App端', icon: 'none' });
+				// #endif
 			}
 		}
 	}

@@ -23,7 +23,7 @@
 
 		<!-- 新增返回按钮容器 -->
 		<view class="footer-button-container">
-			<button type="primary" class="back-button" @click="goBackToLogin">返回登录</button>
+			<button type="primary" class="back-button" @click="goBackToLogin">我已知晓</button>
 		</view>
 
 		<view class="safe-area-bottom"></view>

@@ -8,7 +8,7 @@
 				</view>
 				<view class="moneyContent">
 					<!-- 如果钱超出一定范围，会导致布局有误 -->
-					<u--text v-if="isEyeShow" mode="price" :text="monthlyExpense" size="72rpx" color="#000"></u--text>
+					<u--text v-if="isEyeShow" mode="price" :text="monthlyBalance.monthlyExpend" size="72rpx" color="#000"></u--text>
 					<view v-else>
 						￥*****
 					</view>
@@ -18,8 +18,8 @@
 					</view>
 				</view>
 				<view class="footer">
-					<text>本月收入<text class="bold" v-if="isEyeShow">{{monthlyIncome.toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
-					<text>月结余<text class="bold" v-if="isEyeShow">{{(monthlyIncome - monthlyExpense).toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
+					<text>本月收入<text class="bold" v-if="isEyeShow">{{monthlyBalance.monthlyIncome.toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
+					<text>月结余<text class="bold" v-if="isEyeShow">{{(monthlyBalance.monthlyIncome - monthlyBalance.monthlyExpend).toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
 				</view>
 				<!-- 占位 -->
 				<view class="bottom"></view>
@@ -45,23 +45,33 @@
 				<view class="bottom"></view>
 			</swiper-item>
 		</swiper>
-		<view class="bills" v-show="!isIndexShow">
-			<view class="header">
-				<view class="left">
-					<uni-icons type="list" size="48rpx" color="#212121"></uni-icons>
-					<text>近三日账单</text>
+		<!-- 月度账单展示区域 -->
+		<view class="monthly-bills-section" v-show="!isIndexShow">
+			<!-- <view class="header-fixed"> -->
+				<!-- 筛选按钮暂时保留，但功能未实现 -->
+				<!-- <view v-if="false" class="filter" @click="toFilterBills">
+					筛选
 				</view>
-			</view>
-			<!-- 组件：账单卡片 -->
-			<mj-bill-card 
-				v-for="(bills,index) in userBills"
-				:key="index"
-				:userBillsFromDB="bills.data" 
-				:userAssetsFromDB="userAssets"
-			>
-			</mj-bill-card>
-			<view v-show="userBillsCount === 0">
-				<u-empty mode="list" text="近日没有账单哦,快去记一笔吧"></u-empty>
+			</view> -->
+			<view class="bill-list">
+				<!-- 现在账单明细和日期筛选器在同一行 -->
+				<view class="header">
+					<view class="header-left">
+						<u-icon name="order" size="48rpx" color="#212121"></u-icon>
+						<text>账单明细</text>
+					</view>
+					<mj-datetype-picker @pickDate="pickDate"></mj-datetype-picker>
+				</view>
+				<mj-bill-card
+					v-for="(bills,index) in userBillsByDay"
+					:key="index"
+					:userBillsFromDB="bills"
+					:userAssetsFromDB="userAssets"
+				>
+				</mj-bill-card>
+				<view v-show="userBillsCount === 0">
+					<u-empty mode="list" text="没有找到符合条件的账单哦,快去记一笔吧"></u-empty>
+				</view>
 			</view>
 		</view>
 		<view class="asset" v-if="isIndexShow">
@@ -90,13 +100,25 @@
 		data() {
 			return {
 				isEyeShow: uni.getStorageSync('isEyeShow'),
-				isIndexShow: 0,  // 0 展示首页  1 展示资产页
+				isIndexShow: 0,  // 0 展示首页账单  1 展示资产页
 				bottomBtnText: '点我记账',
 				userAssets: [],
 				userBills: [],
 				currentDate: uni.$u.timeFormat(Date.now(), 'yyyy-mm'),
 				monthlyExpense: 0,
 				monthlyIncome: 0,
+				
+				// 从 bills.vue 迁移过来的数据
+				month: uni.$u.timeFormat(Date.now(), 'yyyy-mm'), // 当前选择的月份，用于账单列表
+				monthNow: uni.$u.timeFormat(Date.now(), 'yyyy-mm'), // 当前实际月份，用于判断是否为当月
+				userBillsByDay: [], // 按日分组的账单，替代原来的 userBills
+				initBillCard: true, // 是否为初始化加载账单列表
+				monthlyBalance: { // 用于账单列表下方的月度收支总览
+					monthlyExpend: 0,
+					monthlyIncome: 0
+				},
+				needShowIndex: 0, // 按天展示的账单索引 (用于触底加载)
+				userBillsOrderByDayArray: [], // 按天倒序排序的原始账单二维数组 (用于触底加载)
 			}
 		},
 		computed: {
@@ -106,46 +128,61 @@
 				let userAssetsIncludeInTotalAssets = this.userAssets.filter(item => item.include_in_total_assets == true)
 				return userAssetsIncludeInTotalAssets.reduce((lastValue, currentArr) => lastValue + currentArr.asset_balance , 0)
 			},
-			// 计算近三日账单个数
+			// 计算月度账单明细中的账单个数
 			userBillsCount() {
 				let count = 0
-				for (const bills of this.userBills) {
-					for(const data of bills.data) {
-						// 如果有账单，则count++
-						count ++
-					}
+				//  修改为遍历 userBillsByDay，因为它是直接给 mj-bill-card 用的数组
+				for (const dayBills of this.userBillsByDay) {
+					count += dayBills.length;
 				}
 				return count
 			}
 		},
-		onReady() {
+		async onReady() {
 			const state = UT.checkUserTokenExpierd() // 检查老用户的token是否过期，如果过期则跳转登录，并返回true；没过期返回false
 			if(state) return
-			// console.log("用户token没过期，继续执行下面的逻辑");
 			
-			// 判断用户是否登录，如果未登录，说明是新用户；如果登录了 则获取账单、资产
 			const {uid} = uniCloud.getCurrentUserInfo()
-			if (!uid) {
-				
-			} else {
-				// 获取用户3日账单列表
-				this.getUserBills()
-				// 获取用户资产列表
-				this.getUserAssets()
-				// 获取用户本月支出和本月收入
+			if (uid) {
+				// 获取用户资产列表 (这个方法已存在，并由 updateAssetsList 事件更新)
+				this.getUserAssets() 
+				// 获取首页顶部轮播所需的本月支出和本月收入 (这个方法已存在)
 				this.getUserMonthlyBillBalance()
+				
+				// *** 新增：获取月度账单列表 (原bills.vue的逻辑) ***
+				await this.getMonthBillsToDisplay() // 调用新的方法获取并处理账单数据
+
+				// 绑定全局事件
+				uni.$on('updateAssetsList',this.getUserAssets) // 已存在
+				uni.$on('updateMonthlyBillBalance',this.getUserMonthlyBillBalance) // 已存在
+				// uni.$on('updateBillsList',this.getUserBills) // 旧的事件，替换为新的
+				uni.$on('updateBillPage', this.upDateMonthBillsToDisplay); // 新增事件，来自bills.vue
+				
+				this.initBillCard = false; // 完成初始化
 			}
-			
-			// 绑定全局事件：更新账单、资产、月支出月收入
-			uni.$on('updateBillsList',this.getUserBills)
-			uni.$on('updateAssetsList',this.getUserAssets)
-			uni.$on('updateMonthlyBillBalance',this.getUserMonthlyBillBalance)
 		},
-		// 添加onShow生命周期，每次显示页面时都重新获取资产数据
-		onShow() {
-			// 如果当前是资产页面，重新获取资产数据
-			if(this.isIndexShow) {
-				this.getUserAssets()
+		// 添加onShow生命周期
+		async onShow() {
+			// 判断用户是否登录，如果未登录 则跳转到登录页
+			const {uid} = uniCloud.getCurrentUserInfo()
+			if (!uid && (this.$mp.page.route !== 'pages/index/index' && this.$mp.page.route !== '/uni_modules/uni-id-pages/pages/login/login-withpwd') ) {
+				uni.redirectTo({
+					url: "/uni_modules/uni-id-pages/pages/login/login-withpwd"
+				})
+				return
+			}
+
+			if (uid) {
+				if(this.isIndexShow) { // 如果当前是资产页面，重新获取资产数据
+					this.getUserAssets()
+				} else {
+					// 如果是账单显示页，且非首次加载(onReady已处理)，则更新账单
+					// 这里的逻辑需要确认，原bills.vue的onShow是直接调用this.getUserBills()
+					// 考虑到首页可能频繁显示，是否每次onShow都刷新月账单，或仅在特定条件下刷新
+					 if (!this.initBillCard) { // 避免与onReady重复加载
+						await this.getMonthBillsToDisplay();
+					 }
+				}
 			}
 		},
 		methods: {
@@ -163,17 +200,20 @@
 				this.isIndexShow = res.detail.current
 				this.isIndexShow ? this.bottomBtnText = '添加资产' : this.bottomBtnText = '点我记账'
 				
-				// 切换到资产页面时，重新加载资产数据
-				if(this.isIndexShow === 1 && prevIndex === 0) {
-					// 判断用户是否登录
+				if(this.isIndexShow === 1 && prevIndex === 0) { // 切换到资产页面
 					const {uid} = uniCloud.getCurrentUserInfo()
 					if(uid) {
 						this.getUserAssets()
 					}
+				} else if (this.isIndexShow === 0 && prevIndex === 1) { // 切换回账单展示
+					const {uid} = uniCloud.getCurrentUserInfo()
+					if(uid) {
+						// 确保月账单数据是最新的
+						this.getMonthBillsToDisplay();
+					}
 				}
 			},
 			clickBottomBtn() {
-				// 判断用户是否登录，如果未登录 则跳转到登录页
 				const {uid} = uniCloud.getCurrentUserInfo()
 				if (!uid) {
 					uni.redirectTo({
@@ -187,58 +227,35 @@
 					url
 				})
 			},
-			// 获取用户3日账单列表
-			async getUserBills() {
-				const res = await this.get3DayBills()
-				this.userBills = []
-				this.userBills = res
-				// 统一修改金额
-				this.userBills.forEach(item => {
-					item.data.forEach(bill => bill.bill_amount /= 100)
-				})
-				// console.log('userBills',this.userBills)
-				uni.setStorage({
-					key:'mj-user-bills',
-					data: this.userBills
-				})
-			},
-			async get3DayBills() {
-				const today = uni.$u.timeFormat(Date.now(), 'yyyy-mm-dd')
-				const yesterday = uni.$u.timeFormat(Date.now() - 86400000, 'yyyy-mm-dd')
-				const theDaybeforeYesterday = uni.$u.timeFormat(Date.now() - 172800000, 'yyyy-mm-dd')
-				// 分别获取今天，昨天，前天的账单列表
-				const day1 = db.collection("mj-user-bills").where(`user_id == $cloudEnv_uid && bill_date > (new Date().getTime() - 86400000) && dateToString(add(new Date(0),bill_date),"%Y-%m-%d","+0800") == "${today}"`).orderBy('bill_date desc').getTemp()
-				const day2 = db.collection("mj-user-bills").where(`user_id == $cloudEnv_uid && bill_date > (new Date().getTime() - 172800000) && dateToString(add(new Date(0),bill_date),"%Y-%m-%d","+0800") == "${yesterday}"`).orderBy('bill_date desc').getTemp()
-				const day3 = db.collection("mj-user-bills").where(`user_id == $cloudEnv_uid && bill_date > (new Date().getTime() - 259200000) && dateToString(add(new Date(0),bill_date),"%Y-%m-%d","+0800") == "${theDaybeforeYesterday}"`).orderBy('bill_date desc').getTemp()
-				// 使用联表查询，将资产id对应的资产添加到bill里
-				const userAssets = db.collection("mj-user-assets").where('user_id == $cloudEnv_uid').field('_id,asset_type,user_id,asset_name').getTemp()
-				const res1 = db.collection(day1,userAssets).getTemp()
-				const res2 = db.collection(day2,userAssets).getTemp()
-				const res3 = db.collection(day3,userAssets).getTemp()
-				const resAll = await db.multiSend(res1,res2,res3)
-				return resAll.result.dataList
-			},
-			// 获取用户月账单的本月支出和本月收入
+			
+			// 原 get3DayBills 和 getUserBills (获取三日账单) 被移除
+
+			// 获取用户月账单的本月支出和本月收入 (用于首页顶部swiper) - 此方法保留
 			async getUserMonthlyBillBalance() {
-				// 筛选条件 bill_date 日期格式化成 2023-09 的字段，按照账单类型进行分组，并计算每个分组的总价
-				const res = await db.collection("mj-user-bills").where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${this.currentDate}"`).groupBy('bill_type').groupField('sum(bill_amount) as bill_amount_total').orderBy('bill_type asc').get()
-				// console.log(res.result.data)
-				const monthlyExpenseTemp = res.result.data.filter(item => item.bill_type === 0)[0]?.bill_amount_total / 100 || '0'
-				const transferBalanceTemp = res.result.data.filter(item => item.bill_type === 2)[0]?.bill_amount_total / 100 || '0'
-				const monthlyIncomeTemp = res.result.data.filter(item => item.bill_type === 1)[0]?.bill_amount_total / 100 || '0'
-				// 分别计算月支出和月收入	月支出 = 月支出 + 转账的手续费	月收入 = 月收入
+				const {uid} = uniCloud.getCurrentUserInfo();
+				if (!uid) return;
+				// 筛选条件 bill_date 日期格式化成 YYYY-MM 的字段，按照账单类型进行分组，并计算每个分组的总价
+				// 注意：这里用的是 this.month (来自日期选择器) 还是固定用当前月份 (this.currentDate)？
+				// 首页顶部swiper应该始终显示当前月份的统计，而不是跟随日期选择器变化。
+				// 因此，我们应该用一个始终代表当前月份的变量。
+				const currentDisplayMonth = uni.$u.timeFormat(Date.now(), 'yyyy-mm');
+
+				const res = await db.collection("mj-user-bills").where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentDisplayMonth}"`).groupBy('bill_type').groupField('sum(bill_amount) as bill_amount_total').orderBy('bill_type asc').get()
+				const monthlyExpenseTemp = res.result.data.filter(item => item.bill_type === 0)[0]?.bill_amount_total / 100 || 0 // 确保是数字
+				const transferBalanceTemp = res.result.data.filter(item => item.bill_type === 2)[0]?.bill_amount_total / 100 || 0 // 确保是数字
+				const monthlyIncomeTemp = res.result.data.filter(item => item.bill_type === 1)[0]?.bill_amount_total / 100 || 0 // 确保是数字
 				this.monthlyExpense = Number(monthlyExpenseTemp) + Number(transferBalanceTemp)
 				this.monthlyIncome = Number(monthlyIncomeTemp)
 			},
-			// 获取用户资产列表
+			// 获取用户资产列表 - 此方法保留
 			async getUserAssets(params = false) {
-				// console.log("getUserAssets");
+				const {uid} = uniCloud.getCurrentUserInfo();
+				if (!uid && !params) return; // 如果未登录且不是由带回调的调用触发，则返回
 				try {
 					const res = await db.collection("mj-user-assets").where(" user_id == $cloudEnv_uid ").get()
 					this.userAssets = []
 					let assets = res.result.data
-					// 如果用户资产列表为空，则创建默认资产，并且设置记账使用的默认资产
-					if(!assets.length) {
+					if(!assets.length && uid) { // 确保uid存在才创建默认资产
 						await db.collection("mj-user-assets").add({
 							asset_type: 'default',
 							asset_balance: 0,
@@ -247,65 +264,206 @@
 						const defalutAsset = await db.collection("mj-user-assets").where(" user_id == $cloudEnv_uid ").get()
 						assets = defalutAsset.result.data
 					}
-					// 统一修改金额
 					assets.forEach(item => item.asset_balance /= 100)
-					
-					// 合并同类型同名资产
 					const mergedAssets = this.mergeAssets(assets)
 					this.userAssets = mergedAssets
-					
-					// 保存在缓存中
 					uni.setStorageSync('mj-user-assets', this.userAssets)
-					if (params) {
+					if (params && typeof params.resolve === 'function') { // 确保params是期望的带resolve的对象
 						params.resolve('ok')
 					}
 				} catch(e) {
 					console.error('获取资产列表出错:', e)
+					if (params && typeof params.reject === 'function') {
+						params.reject(e);
+					}
 				}
 			},
 			
-			// 合并同类型同名资产
+			// 合并同类型同名资产 - 此方法保留
 			mergeAssets(assets) {
 				if (!assets || !Array.isArray(assets) || assets.length === 0) {
 					return []
 				}
-				
-				// 创建一个Map，key为"asset_type+asset_name"（用于区分不同类型同名资产）
 				const assetMap = new Map()
-				
 				assets.forEach(asset => {
-					// 对于没有自定义名称的资产，使用其类型作为名称
 					const assetName = asset.asset_name || asset.asset_type
-					// 创建唯一标识
 					const key = `${asset.asset_type}_${assetName}`
-					
 					if (assetMap.has(key)) {
-						// 如果已存在同名同类型资产，合并金额
 						const existingAsset = assetMap.get(key)
 						existingAsset.asset_balance += asset.asset_balance
-						
-						// 如果任一资产设置为不隐藏，则合并后的资产也不隐藏
 						existingAsset.hide_in_interface = existingAsset.hide_in_interface && asset.hide_in_interface
-						
-						// 如果任一资产设置为计入总资产，则合并后的资产也计入总资产
 						existingAsset.include_in_total_assets = existingAsset.include_in_total_assets || asset.include_in_total_assets
-						
-						// 更新Map
 						assetMap.set(key, existingAsset)
 					} else {
-						// 不存在则添加到Map
 						assetMap.set(key, {...asset})
 					}
 				})
-				
-				// 将Map转回数组
 				return Array.from(assetMap.values())
+			},
+
+			// ---- 从 bills.vue 迁移过来的方法 ----
+			// 触发日期选择器
+			pickDate(res) {
+				const {value} = res
+				this.month = uni.$u.timeFormat(value, 'yyyy-mm')
+				this.getMonthBillsToDisplay() // 更新账单列表
+			},
+
+			// 获取并处理月度账单数据 (原 getMonthBills)
+			async getMonthBillsToDisplay() {
+				const {uid} = uniCloud.getCurrentUserInfo();
+				if (!uid) return;
+
+				console.log(`开始获取并处理 ${this.month} 的账单数据结构`);
+				// 如果非初始化 (例如，通过日期选择器更改月份时)
+				if(!this.initBillCard) {
+					this.userBillsByDay = [] // 重置显示的账单列表
+				}
+				
+				// 按月份获取账单，记账日期降序排列
+				const userMonthBillsQuery = db.collection("mj-user-bills")
+					.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${this.month}"`)
+					.orderBy('bill_date desc')
+					.getTemp();
+				// 联表查询用户资产，用于在账单卡片中显示账户名
+				const userAssetsQuery = db.collection("mj-user-assets")
+					.where('user_id == $cloudEnv_uid')
+					.field('_id,asset_type,user_id,asset_name')
+					.getTemp();
+				
+				const res = await db.collection(userMonthBillsQuery, userAssetsQuery).get();
+				
+				let rawUserBills = res.result.data;
+				// 统一修改金额为 元
+				rawUserBills.forEach(bill => bill.bill_amount /= 100);
+
+				// 计算当前选择月份的支出和收入 (用于账单列表下方的总览)
+				const categorizedBillsByBillType = { 0: 0, 1: 0, 2: 0 };
+				for (const bill of rawUserBills) {
+				  const { bill_type, bill_amount } = bill;
+				  categorizedBillsByBillType[bill_type] += bill_amount;
+				}
+				this.monthlyBalance.monthlyExpend = categorizedBillsByBillType[0] + categorizedBillsByBillType[2];
+				this.monthlyBalance.monthlyIncome = categorizedBillsByBillType[1];
+
+				// --- 按天对账单进行分类 ---
+				let numberOfDaysInSelectedMonth;
+				// 判断是当月还是历史月份，以确定日期分组的范围
+				if(this.month === this.monthNow) { // 如果是当前月份
+					const today = new Date();
+					numberOfDaysInSelectedMonth = today.getDate(); // 获取今天是本月的第几天
+				} else { // 如果是历史月份
+					numberOfDaysInSelectedMonth = this.getTotalDaysInMonth(this.month); // 获取该月的总天数
+				}
+
+				const twoDimensionalArray = [];
+				for (let i = 0; i < numberOfDaysInSelectedMonth; i++) {
+					twoDimensionalArray.push([]);
+				}
+				
+				rawUserBills.forEach(bill => {
+					let billDay = parseInt(uni.$u.timeFormat(bill.bill_date, 'dd'), 10); // 获取账单是几号
+					// 数组索引计算：数组是按日期倒序的，所以最近的日期（如当月30号）应该在数组前面。
+					// 例如，如果 numberOfDaysInSelectedMonth 是30，30号的账单放在索引0，29号的账单放在索引1，以此类推。
+					// 索引 = (总天数 - 账单日期日)
+					// 注意：如果月份是当前月，numberOfDaysInSelectedMonth 是今天的日期，不是整月天数。
+					// 例如，当前是9月10日，则 numberOfDaysInSelectedMonth=10。
+					// 9月10日的账单，billDay=10, index = 10-10=0.
+					// 9月9日的账单，billDay=9, index = 10-9=1.
+					// 9月1日的账单，billDay=1, index = 10-1=9.
+					// 这个逻辑和 bills.vue 保持一致。
+					const index = numberOfDaysInSelectedMonth - billDay;
+					if (index >= 0 && index < numberOfDaysInSelectedMonth) { // 确保索引在有效范围内
+						twoDimensionalArray[index].push(bill);
+					} else {
+						// console.warn("账单日期索引计算错误", bill, "billDay:", billDay, "numberOfDays:", numberOfDaysInSelectedMonth, "index:", index);
+					}
+				});
+				
+				this.userBillsOrderByDayArray = twoDimensionalArray; // 存储原始按天分组数据，用于触底加载
+
+				// 初始加载时，决定显示多少天的账单 (至少6条，或全部)
+				this.needShowIndex = this.findNeedShowIndex(twoDimensionalArray) ?? numberOfDaysInSelectedMonth;
+				this.userBillsByDay = twoDimensionalArray.slice(0, this.needShowIndex + 1);
+				
+				console.log('账单列表数据处理完毕，userBillsByDay:', this.userBillsByDay);
+			},
+
+			// 当账单数据更新时（例如，记一笔后，或删除账单后）调用此方法
+			upDateMonthBillsToDisplay() {
+				this.getMonthBillsToDisplay(this.month);
+				this.getUserAssets(); // 确保资产信息也是最新的，因为账单卡片可能需要
+				this.getUserMonthlyBillBalance(); // 更新首页顶部的月度收支统计
+			},
+
+			// 获取指定年月的总天数
+			getTotalDaysInMonth(yearmonth) {
+				const [year,monthStr] = yearmonth.split('-');
+				const month = parseInt(monthStr, 10);
+				// 创建一个日期对象，月份参数是 0-11，所以 month-1
+				// 将日期设为下个月的第0天，即为本月的最后一天
+				const date = new Date(year, month, 0);
+				return date.getDate(); // 获取本月总天数
+			},
+
+			// 找到账单数 >= 6条时所在的日期分组索引 (用于初始加载)
+			findNeedShowIndex(twoDimensionalArray) {
+				if (!twoDimensionalArray || twoDimensionalArray.length === 0) return 0;
+				let currentIndex = 0;
+				let accumulatedBillCount = 0;
+				for (const dayBills of twoDimensionalArray) {
+					accumulatedBillCount += dayBills.length;
+					if (accumulatedBillCount >= 6) {
+						return currentIndex;
+					}
+					currentIndex++;
+				}
+				// 如果总账单数少于6条，则返回最后一个有账单的索引，或者数组的最后索引
+				return currentIndex > 0 ? currentIndex -1 : 0;
+			},
+			
+			// 筛选按钮点击（占位）
+			toFilterBills() {
+				uni.showToast({
+					title:"功能开发中~",
+					icon:"none"
+				})
+			}
+		},
+		// ---- 触底加载逻辑，从 bills.vue 迁移 ----
+		onReachBottom() {
+			// 只有在账单显示区域才执行触底加载
+			if (this.isIndexShow === 0) {
+				console.log("首页触底，尝试加载更多账单...");
+				if (this.needShowIndex >= this.userBillsOrderByDayArray.length - 1) {
+					console.log("所有账单已加载完毕");
+					uni.showToast({ title: '没有更多账单了', icon: 'none' });
+					return;
+				}
+
+				this.needShowIndex++;
+				let oneDayBillArray = this.userBillsOrderByDayArray[this.needShowIndex];
+				
+				// 可能存在某一天没有账单的情况，继续查找下一个有账单的日期
+				while(this.needShowIndex < this.userBillsOrderByDayArray.length -1 && (!oneDayBillArray || oneDayBillArray.length === 0) ) {
+					this.needShowIndex++;
+					oneDayBillArray = this.userBillsOrderByDayArray[this.needShowIndex];
+				}
+
+				if (oneDayBillArray && oneDayBillArray.length > 0) {
+					this.userBillsByDay.push(oneDayBillArray);
+					console.log("成功加载更多账单:", oneDayBillArray);
+				} else {
+					console.log("没有更多可加载的账单了（可能后续天数为空）");
+					// uni.showToast({ title: '没有更多账单了', icon: 'none' });
+				}
 			}
 		},
 		onUnload(){
-			uni.$off('updateAssetsList')
-			uni.$off('updateBillsList')
-			uni.$off('updateMonthlyBillBalance')
+			uni.$off('updateAssetsList', this.getUserAssets)
+			// uni.$off('updateBillsList') // 旧事件已移除
+			uni.$off('updateMonthlyBillBalance', this.getUserMonthlyBillBalance)
+			uni.$off('updateBillPage', this.upDateMonthBillsToDisplay); // 移除新事件
 		},
 		// 分享功能
 		onShareAppMessage () {
@@ -369,8 +527,15 @@
 				}
 			}
 		}
-		.bills,.asset {
-			padding-bottom: 104rpx;
+
+		// 原 .bills 和 .asset 的通用底部填充现在由 .monthly-bills-section 和 .asset 单独处理
+		// .bills,.asset {
+		// 	padding-bottom: 104rpx; // 移除，或由各自的section控制
+		// }
+
+		// 资产页样式 (原 .asset)
+		.asset {
+			padding-bottom: 104rpx; // 为底部按钮留出空间
 			.header {
 				margin: 16rpx 0;
 				padding-left: 12rpx;
@@ -399,6 +564,93 @@
 				}
 			}
 		}
+		
+		// 新增：月度账单展示区域的样式
+		.monthly-bills-section {
+			padding-bottom: 104rpx; // 为底部按钮留出空间
+			// 从 bills.vue 迁移过来的样式
+			.header-fixed {
+				// 注意：在首页中，这个header不应该是fixed的，因为它在swiper下方。
+				// 如果需要固定在页面顶部，则需要调整swiper的布局或者将此header移到swiper外部最顶层。
+				// 暂时保持其原有样式，但可能需要根据实际效果调整。
+				// position: fixed; // 移除fixed，因为它在首页的swiper下方
+				width: 100%;
+				// top: 0; // 移除
+				// left: 0; // 移除
+				box-sizing: border-box;
+				padding: 0 28rpx;
+				background-color: $mj-theme-color; // 主题色背景
+				height: 80rpx;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 32rpx;
+				color: $mj-text-color; // 文本颜色
+				// z-index: 999; // 如果不是fixed，z-index可能意义不大
+			}
+			.linear-gradient {
+				// 这个渐变背景是紧随header-fixed的，如果header-fixed不固定了，它的定位也需要考虑
+				// position: absolute; // 移除绝对定位，让它自然流动
+				// top: 80rpx; // 移除
+				left: 0;
+				right: 0;
+				// height: 100rpx; // 可以调整或移除，看是否还需要这个视觉效果
+				background-image: linear-gradient(#9fcba7, #fafafa); // 主题色到几乎白色的渐变
+				// z-index: -1; // 如果不是覆盖内容，z-index意义不大
+			}
+			.card-money {
+				margin: 20rpx 28rpx 0;
+				box-sizing: border-box;
+				background-color: #fff;
+				height: 88rpx;
+				border-radius: 36rpx;
+				font-size: 24rpx;
+				display: flex;
+				justify-content: space-around;
+				align-items: center;
+				color: $mj-text-color;
+				box-shadow: rgba(0, 0, 0, 0.03) 0px 20px 25px -5px, rgba(0, 0, 0, 0.01) 0px 10px 10px -5px;
+				.left {
+					display: flex;
+					justify-content: start;
+				}
+				.right {
+					display: flex;
+					justify-content: start;
+				}
+			}
+			.bill-list {
+				.header { // 账单明细列表的头部
+					margin: 16rpx 28rpx; // 调整margin，使其与日期选择器在同一水平线上时更好看
+					padding-left: 0; // 移除原有的padding-left，因为图标和文字会组合
+					display: flex;
+					justify-content: space-between; // 使左右内容分开
+					align-items: center;
+					color: #000; // 文本黑色
+					font-size: 32rpx;
+					
+					.header-left {
+						display: flex;
+						align-items: center;
+						text {
+							padding-left: 8rpx;
+						}
+					}
+					// 为 mj-datetype-picker 组件设置样式，使其与"账单明细"文本类似
+					mj-datetype-picker {
+						display: flex; // 将组件自身设为flex容器，使其内部元素可以更好地对齐
+						font-size: 32rpx; // 设置字体大小与父级 .header 一致
+						color: #000;       // 设置字体颜色与父级 .header 一致
+						align-items: center; // 垂直居中组件内部的元素
+						// 如果 mj-datetype-picker 组件内部的元素（如 picker 图标）颜色不正确，
+						// 可能需要使用 ::v-deep 进一步调整其内部样式。
+						// 例如： ::v-deep .uni-input { color: #000; }
+						//       ::v-deep .uni-icons { color: #000 !important; }
+					}
+				}
+			}
+		}
+
 		.bottom-btn {
 			box-sizing: border-box;
 			z-index: 999;
@@ -409,4 +661,8 @@
 			opacity: 0.98;
 		}
 	}
+</style>
+
+<style lang="scss" >
+	
 </style>

@@ -37,10 +37,10 @@
 				</view>
 				<view class="money">
 					<view class="expend" @tap="tapExpend">
-						<u--text mode="price" :text="monthlyExpend" color="#dd524d" margin="0 0 0 20rpx" bold></u--text>
+						<u--text mode="price" :text="monthlyExpend" color="#dd524d" bold></u--text>
 					</view>
 					<view class="income" @tap="tapIncome">
-						<u--text mode="price" :text="monthlyIncome" color="#219a6d" margin="0 0 0 20rpx" bold></u--text>
+						<u--text mode="price" :text="monthlyIncome" color="#219a6d" bold></u--text>
 					</view>
 				</view>
 			</view>
@@ -129,17 +129,18 @@
 				// --- 5.19新增：柱状图相关 data ---
 				chartsDataColumn: {},
 				optsColumn: {
+					padding: [10,10,0,10],
 					dataLabel: false,
 					enableScroll: true,
 					fontSize: 10,
 					enableMarkLine: true,
 					color: ['#dd524d','#009c63'],
 					yAxis: {
-						disabled: true,
+						//disabled: true, // 显示y轴
 						disableGrid: true
 					},
 					xAxis: {
-						itemCount: 10,
+						itemCount: 20,
 						labelCount: 5,
 						fontSize: 10,
 						min: 0
@@ -545,7 +546,12 @@
 
 					.expend {
 						width: 166rpx;
-						margin-right: 100rpx;
+						text-align: center;
+					}
+
+					.income {
+						width: 166rpx;
+						text-align: center;
 					}
 				}
 			}

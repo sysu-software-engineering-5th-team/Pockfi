@@ -218,6 +218,15 @@
 			},
 			logout() {
 				mutations.logout()
+				// 5.24 退出时清除用户信息缓存
+				uni.removeStorageSync('mj-user-info'); // 清除自定义的用户信息缓存
+				// 可选：立即重置本地userInfo，以便UI即时（部分）更新
+				this.userInfo = {
+				    avatarSrc: '',
+				    nickname: '',
+				    registerDate: 0,
+				    useDate: 0,
+				};
 			},
 			// 注销
 			deactivate() {

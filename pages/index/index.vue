@@ -4,7 +4,7 @@
 			indicator-active-color="#303344" duration="500" :circular="false" @change="swiperChange">
 			<swiper-item class="swiper-item">
 				<view class="header">
-					本月支出(元)
+					当月支出(元)
 				</view>
 				<view class="moneyContent">
 					<!-- 如果钱超出一定范围，会导致布局有误 -->
@@ -18,8 +18,8 @@
 					</view>
 				</view>
 				<view class="footer">
-					<text>本月收入<text class="bold" v-if="isEyeShow">{{monthlyBalance.monthlyIncome.toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
-					<text>月结余<text class="bold" v-if="isEyeShow">{{(monthlyBalance.monthlyIncome - monthlyBalance.monthlyExpend).toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
+					<text>当月收入<text class="bold" v-if="isEyeShow">{{monthlyBalance.monthlyIncome.toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
+					<text>当月结余<text class="bold" v-if="isEyeShow">{{(monthlyBalance.monthlyIncome - monthlyBalance.monthlyExpend).toFixed(2)}}</text><text class="bold" v-else>*****</text></text>
 				</view>
 				<!-- 占位 -->
 				<view class="bottom"></view>
@@ -51,13 +51,20 @@
 				<!-- 筛选按钮暂时保留，但功能未实现 -->
 				<!-- <view v-if="false" class="filter" @click="toFilterBills">
 					筛选
+				</view> -->
+			<!-- </view> -->
+			<!-- <view class="card-money">
+				<view class="left">
+					月支出：<u--text mode="price" :text="monthlyBalance.monthlyExpend" color="#dd524d" size="24rpx" bold></u--text>
+				</view>
+				<view class="right">
+					月收入：<u--text mode="price" :text="monthlyBalance.monthlyIncome" color="#219a6d" size="24rpx" bold></u--text>
 				</view>
 			</view> -->
 			<view class="bill-list">
-				<!-- 现在账单明细和日期筛选器在同一行 -->
 				<view class="header">
 					<view class="header-left">
-						<u-icon name="order" size="48rpx" color="#212121"></u-icon>
+						<uni-icons type="list" size="48rpx" color="#212121"></uni-icons>
 						<text>账单明细</text>
 					</view>
 					<mj-datetype-picker @pickDate="pickDate"></mj-datetype-picker>
@@ -570,9 +577,6 @@
 			padding-bottom: 104rpx; // 为底部按钮留出空间
 			// 从 bills.vue 迁移过来的样式
 			.header-fixed {
-				// 注意：在首页中，这个header不应该是fixed的，因为它在swiper下方。
-				// 如果需要固定在页面顶部，则需要调整swiper的布局或者将此header移到swiper外部最顶层。
-				// 暂时保持其原有样式，但可能需要根据实际效果调整。
 				// position: fixed; // 移除fixed，因为它在首页的swiper下方
 				width: 100%;
 				// top: 0; // 移除
@@ -594,7 +598,7 @@
 				// top: 80rpx; // 移除
 				left: 0;
 				right: 0;
-				// height: 100rpx; // 可以调整或移除，看是否还需要这个视觉效果
+				height: 100rpx; // 可以调整或移除，看是否还需要这个视觉效果
 				background-image: linear-gradient(#9fcba7, #fafafa); // 主题色到几乎白色的渐变
 				// z-index: -1; // 如果不是覆盖内容，z-index意义不大
 			}
@@ -621,32 +625,21 @@
 			}
 			.bill-list {
 				.header { // 账单明细列表的头部
-					margin: 16rpx 28rpx; // 调整margin，使其与日期选择器在同一水平线上时更好看
-					padding-left: 0; // 移除原有的padding-left，因为图标和文字会组合
+					margin: 16rpx 0;
+					padding-left: 12rpx;
 					display: flex;
 					justify-content: space-between; // 使左右内容分开
 					align-items: center;
 					color: #000; // 文本黑色
 					font-size: 32rpx;
-					
+					text {
+						padding-left: 8rpx;
+					}
 					.header-left {
 						display: flex;
 						align-items: center;
-						text {
-							padding-left: 8rpx;
-						}
 					}
-					// 为 mj-datetype-picker 组件设置样式，使其与"账单明细"文本类似
-					mj-datetype-picker {
-						display: flex; // 将组件自身设为flex容器，使其内部元素可以更好地对齐
-						font-size: 32rpx; // 设置字体大小与父级 .header 一致
-						color: #000;       // 设置字体颜色与父级 .header 一致
-						align-items: center; // 垂直居中组件内部的元素
-						// 如果 mj-datetype-picker 组件内部的元素（如 picker 图标）颜色不正确，
-						// 可能需要使用 ::v-deep 进一步调整其内部样式。
-						// 例如： ::v-deep .uni-input { color: #000; }
-						//       ::v-deep .uni-icons { color: #000 !important; }
-					}
+					// 月份选择器的右边距在原始组件中设置
 				}
 			}
 		}
@@ -661,8 +654,4 @@
 			opacity: 0.98;
 		}
 	}
-</style>
-
-<style lang="scss" >
-	
 </style>

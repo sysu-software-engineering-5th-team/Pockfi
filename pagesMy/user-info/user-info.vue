@@ -3,9 +3,11 @@
 		<view class="linear-gradient"></view>
 		<mj-card title="我的">
 			<view class="me">
-				<view class="avatar">
+				<view class="avatar" @click="handleAvatarClick">
 					<u-avatar :src="userInfo.avatarSrc" size="100rpx"></u-avatar>
-					<button open-type="chooseAvatar" class="avatarBtn" @chooseavatar="getAvatar"></button>
+					<!-- #ifdef MP-WEIXIN -->
+					<button open-type="chooseAvatar" class="avatarBtn" @chooseavatar="getAvatarFromWeixin"></button>
+					<!-- #endif -->
 				</view>
 				<view class="main">
 					<view class="username" @click="clickName">
@@ -61,15 +63,114 @@
 			}
 		},
 		methods: {
-			getAvatar(res) {
-				// console.log("头像被点击");
-				// 修改头像  修改后保存在本地存储中 并修改数据库中的头像url
-				this.userInfo.avatarSrc = res.detail.avatarUrl
-				uni.setStorageSync('mj-user-info', this.userInfo)
-				db.collection("uni-id-users").where("_id == $cloudEnv_uid").update({
-					avatar: res.detail.avatarUrl
-				})
+			getAvatarFromWeixin(event) {
+				// #ifdef MP-WEIXIN
+				if (event && event.detail && event.detail.avatarUrl) {
+					const weixinAvatarUrl = event.detail.avatarUrl;
+					// 直接使用微信返回的 URL 更新头像
+					this.updateUserAvatar(weixinAvatarUrl);
+				} else {
+					this.$refs.uToastForNickname.show({
+						type: 'error',
+						message: '获取微信头像失败',
+						position: 'top'
+					});
+				}
+				// #endif
+			},
+			// 5.24 补充移动端更新头像
+			async handleAvatarClick() {
+				// #ifdef MP-WEIXIN
+				// 在微信中，如果用户不小心点到头像本身而不是透明按钮，
+				// 我们可以选择什么都不做（让按钮处理），或者也弹起选择。
+				// 为避免混淆，此处可以加一个确认或提示，或者直接允许选择。
+				// 当前设计是外层view响应点击，微信按钮覆盖在其上，所以微信上会优先触发按钮的chooseAvatar。
+				// 如果按钮由于某种原因未触发，此方法可能作为备用。
+				// 或者，更简单的是，此方法主要服务于非微信小程序平台。
+				// 为确保 App 端能触发，我们不在此处 return。
+				// console.log('handleAvatarClick triggered');
+				// #endif
 
+				try {
+					const chooseImageRes = await uni.chooseImage({
+						count: 1,
+						sizeType: ['compressed'], // 选择压缩图
+						sourceType: ['album', 'camera'], // 从相册选择或拍照
+					});
+
+					if (chooseImageRes && chooseImageRes.tempFilePaths && chooseImageRes.tempFilePaths.length > 0) {
+						const tempFilePath = chooseImageRes.tempFilePaths[0];
+						
+						uni.showLoading({ title: '头像上传中...' });
+
+						const uploadResult = await uniCloud.uploadFile({
+							filePath: tempFilePath,
+							// 为每个用户使用固定的路径覆盖旧头像，或使用时间戳保证唯一性
+							// 这里使用用户ID和时间戳确保唯一性，避免缓存问题，但会产生多个文件
+							// 若想覆盖，可用： `user_avatars/${uniCloud.getCurrentUserInfo().uid}.jpg`
+							cloudPath: `user_avatars/${uniCloud.getCurrentUserInfo().uid}_${Date.now()}.jpg`,
+							cloudPathAsRealPath: true, // 获取可直接访问的 HTTPS URL
+						});
+						
+						uni.hideLoading();
+
+						if (uploadResult.fileID) {
+							// 使用上传后云存储的 URL 更新头像
+							this.updateUserAvatar(uploadResult.fileID);
+						} else {
+							throw new Error('上传失败，未返回 fileID');
+						}
+					}
+				} catch (error) {
+					uni.hideLoading();
+					// uni.chooseImage 用户取消选择时会进入 catch，需要判断 error.errMsg
+					if (error.errMsg && (error.errMsg.includes('chooseImage:fail cancel') || error.errMsg.includes('chooseAvatar:fail cancel'))) {
+						// 用户取消，不提示错误
+						return;
+					}
+					console.error("选择或上传头像错误:", error);
+					this.$refs.uToastForNickname.show({
+						type: 'error',
+						message: error.message || '头像设置失败，请重试',
+						position: 'top'
+					});
+				}
+			},
+			async updateUserAvatar(newAvatarUrl) {
+				const oldAvatarSrc = this.userInfo.avatarSrc; // 用于失败时回滚UI
+				this.userInfo.avatarSrc = newAvatarUrl; // 即时更新UI
+
+				try {
+					// 更新数据库
+					await db.collection("uni-id-users").where("_id == $cloudEnv_uid").update({
+						avatar: newAvatarUrl
+					});
+
+					// 更新本地缓存 (mj-user-info)
+					// 确保合并了其他可能已在缓存中的信息
+					const storedUserInfo = uni.getStorageSync('mj-user-info') || {};
+					const updatedStoredUserInfo = {
+						...storedUserInfo, // 保留缓存中其他字段
+						avatarSrc: newAvatarUrl, // 更新头像
+						nickname: this.userInfo.nickname // 如果昵称也在此页面修改，也应来自 this.userInfo
+					};
+					uni.setStorageSync('mj-user-info', updatedStoredUserInfo);
+					
+					this.$refs.uToastForNickname.show({
+						type: 'success',
+						message: '头像更新成功!',
+						position: 'top'
+					});
+
+				} catch (dbError) {
+					this.userInfo.avatarSrc = oldAvatarSrc; // 数据库更新失败，回滚UI上的头像
+					console.error("数据库头像更新失败:", dbError);
+					this.$refs.uToastForNickname.show({
+						type: 'error',
+						message: '头像同步失败，请重试',
+						position: 'top'
+					});
+				}
 			},
 			clickName() {
 				// console.log("昵称被点击");
@@ -88,7 +189,14 @@
 					return
 				}
 				this.userInfo.nickname = res.detail.value.nickname
-				uni.setStorageSync('mj-user-info', this.userInfo)
+				// 更新缓存时，确保 avatarSrc 是最新的
+				const storedUserInfo = uni.getStorageSync('mj-user-info') || {};
+				const updatedStoredUserInfo = {
+					...storedUserInfo,
+					avatarSrc: this.userInfo.avatarSrc, 
+					nickname: this.userInfo.nickname 
+				};
+				uni.setStorageSync('mj-user-info', updatedStoredUserInfo);
 				db.collection("uni-id-users").where("_id == $cloudEnv_uid").update({
 					nickname: res.detail.value.nickname
 				})
@@ -98,50 +206,45 @@
 			async getUserInfo() {
 				const userInfoFromStorage = uni.getStorageSync('mj-user-info')
 				if(userInfoFromStorage) {
-					Object.assign(this.userInfo, userInfoFromStorage)
+					// 确保从缓存加载时，本页关心的字段得到更新
+					this.userInfo.avatarSrc = userInfoFromStorage.avatarSrc || '';
+					this.userInfo.nickname = userInfoFromStorage.nickname || '';
+					this.userInfo.registerDate = userInfoFromStorage.registerDate || '';
+					// userLabel 是此页面特有的，可以不来自 mj-user-info 的主缓存
 				}
 				
 				const res = await db.collection("uni-id-users").where("_id == $cloudEnv_uid").field("_id,nickname,avatar,register_date").get()
-				let {avatar: avatarSrc, nickname, register_date: registerDate} = res.result.data[0]
-				// 使用注册日期计算出会员编号
-				const userLabel = Math.round(registerDate * 3 / 200000).toString()
-				// 注册日期格式化
-				this.registerDateForTitle = uni.$u.timeFormat(registerDate,'yyyy年mm月')
-				registerDate = uni.$u.timeFormat(registerDate,'yyyy-mm-dd')
+				let {avatar: dbAvatarSrc, nickname: dbNickname, register_date: dbRegisterDate} = res.result.data[0]
 				
+				const userLabel = Math.round(dbRegisterDate * 3 / 200000).toString()
+				this.registerDateForTitle = uni.$u.timeFormat(dbRegisterDate,'yyyy年mm月')
+				const formattedRegisterDate = uni.$u.timeFormat(dbRegisterDate,'yyyy-mm-dd')
 				
-				const objTemp = {avatarSrc, nickname, registerDate, userLabel}
-				if(!this.compareObjects(userInfoFromStorage,objTemp)) {
-					// 如果数据库数据和缓存中的数据有区别，覆盖缓存，并再次赋值
-					Object.assign(this.userInfo, objTemp)
-					uni.setStorageSync('mj-user-info', this.userInfo)
+				// 将从数据库获取的值赋给 this.userInfo
+				const dbUserInfo = {
+					avatarSrc: dbAvatarSrc || '', // 使用数据库的头像
+					nickname: dbNickname || '',   // 使用数据库的昵称
+					registerDate: formattedRegisterDate,
+					userLabel: userLabel 
+				};
+
+				// 更新UI并决定是否更新缓存
+				// 如果数据库数据与当前UI（可能来自旧缓存）不同，则更新UI
+				if (this.userInfo.avatarSrc !== dbUserInfo.avatarSrc || 
+					this.userInfo.nickname !== dbUserInfo.nickname ||
+					this.userInfo.registerDate !== dbUserInfo.registerDate) {
+					Object.assign(this.userInfo, dbUserInfo);
 				}
-			},
-			// 比较两个对象的属性名和值是否相等
-			compareObjects(obj1, obj2) {
-			  // 获取对象的属性名数组
-			  const keys1 = Object.keys(obj1);
-			  const keys2 = Object.keys(obj2);
-			
-			  // 检查属性名数组长度是否相等
-			  if (keys1.length !== keys2.length) {
-			    return false;
-			  }
-			
-			  // 比较属性名和属性值
-			  for (let key of keys1) {
-			    // 检查属性名是否存在于第二个对象中
-			    if (!obj2.hasOwnProperty(key)) {
-			      return false;
-			    }
-			
-			    // 比较属性值
-			    if (obj1[key] !== obj2[key]) {
-			      return false;
-			    }
-			  }
-			
-			  return true;
+				
+				// 将最新的（以数据库为准）信息更新到 mj-user-info 缓存
+				const cacheToUpdate = {
+					...(uni.getStorageSync('mj-user-info') || {}), // 先获取现有缓存
+					avatarSrc: this.userInfo.avatarSrc,
+					nickname: this.userInfo.nickname,
+					registerDate: this.userInfo.registerDate
+					// useDate 等字段不由本页管理，会保留(如果之前存在)
+				};
+				uni.setStorageSync('mj-user-info', cacheToUpdate);
 			}
 		},
 		onReady() {

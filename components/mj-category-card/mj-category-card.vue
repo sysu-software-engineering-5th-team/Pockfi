@@ -1,6 +1,6 @@
 <template>
 	<view>
-		<view v-for="category in categoryList">
+		<view v-for="(category, index) in categoryList" :key="index">
 			<view class="category-card">
 				 <view class="left">
 					<mj-icon-with-background :type="category.category_icon" size="48rpx" customPrefix="miaoji"></mj-icon-with-background>
@@ -22,7 +22,7 @@
 					</view>
 				 </view>
 			</view>
-			<view class="line" v-if="item != 6">
+			<view class="line" v-if="index !== categoryList.length - 1">
 				<u-line length="80%"></u-line>
 			</view>
 		</view>

@@ -131,6 +131,8 @@
 		display: flex;
 		justify-content: start;
 		align-items: center;
+		// 5.24 添加右边距
+		padding-right: 8rpx;
 		.uicon-arrow-down {
 			padding-left: 8rpx;
 		}

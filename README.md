@@ -120,6 +120,7 @@ uni.scss                // 全局的样式文件
     - [X] 登录
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+    
 2. 记账模块
 
     - [X] 手动添加消费记录
@@ -138,6 +139,7 @@ uni.scss                // 全局的样式文件
     - [X] 同名资产合并
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+    
 3. 报表
 
     - [X] 消费/收入柱状图
@@ -147,6 +149,7 @@ uni.scss                // 全局的样式文件
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
     - [ ] 生成消费分析报告
+    
 4. 理财
 
     - [X] 计算存款利息（存款计算器）
@@ -156,10 +159,12 @@ uni.scss                // 全局的样式文件
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
     - [ ] 对比股票收益率
+    
 5. 提醒
 
     - [ ] 月度预算（+提醒）
     - [ ] 财务目标设定
+    
 6. 我的
 
     - [X] 卡片展示
@@ -172,20 +177,84 @@ uni.scss                // 全局的样式文件
     - [X] 关于
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+    
 7. 登录
 
     - [X] 正常登录
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+      
+      - 标准测试：
+        - [x] 正常登录：输入正确账号、正确密码，客户端正确提示“登陆成功”
+      - 边界测试：
+      
+        - [x] 密码错误：输入错误密码，客户端正确提示“密码错误”
+        - [x] 账号错误：输入错误账号，客户端正确提示“此账号未注册”
+        - [x] 不同意用户服务协议：客户端正确提示并可以选择同意或取消
+      
+      - 改进建议(可选)：
+      
+        - [ ] 其他登录方式
+      
+          
+      
     - [ ] 注册账号（目前可通过账密注册）
+    
+      - 标准测试：
+        - [x] 账密注册：成功注册并载入数据库
+    
+      - 边界测试：
+    
+        - [ ] 重复注册：在后台有报错，但是客户端无显示
+        <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-26</div></div>
+        
+        
+        - [x] 超长用户名：客户端正确提示
+        
+        - [x] 超长昵称：客户端正确提示
+        
+        - [x] 超长密码：客户端正确限制超额输入
+        
+        - [x] 不同意用户服务协议：客户端正确提示并可以选择同意或取消
+        
+      - 改进建议(可选)：
+    
+        - [ ] 其他注册方式
+    
+        - [ ] 超长密码：客户端正确限制超额输入，同时给出提示
+    
+          
+    
     - [ ] 忘记密码（已有页面模板但未实现验证手机号码）
+    
+      
+    
     - [X] 隐私政策
-
+    
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+      
+      - 标准测试：
+      
+        - [x] 隐私政策条款：客户端正确点击进入详情，正确点击返回
+      
+        - [x] 点击勾选：客户端正确点击勾选，再次点击取消
+      
+          
+      
     - [X] 软件条约
-
+    
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+      
+      - 标准测试：
+      
+        - [x] 软件条约：客户端正确点击进入详情，正确点击返回
+      
+        - [x] 点击勾选：客户端正确点击勾选，再次点击取消
+      
+          
+      
     - [ ] 快捷登录（已有页面模板）
+    
 8. 管理员
 
     - [ ] 发布更新

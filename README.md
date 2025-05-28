@@ -183,7 +183,7 @@ uni.scss                // 全局的样式文件
     
     - [x] 记账——点我记账——保存——收入：正确输入金额，正确选择分类，并正确保存
     
-    - [ ] 记账——点我记账——保存——收入：正确输入金额，正确选择转账资产，正确输入手续费，并正确产生转账，但是实际资产并未变化。[测试截图](#记账——点我记账——保存——收入)
+    - [ ] 记账——点我记账——保存——转账：正确输入金额，正确选择转账资产，正确输入手续费，并正确产生转账，但是实际资产并未变化。[测试截图](#记账——点我记账——保存——收入)
     
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-28</div></div>
     
@@ -199,6 +199,10 @@ uni.scss                // 全局的样式文件
     
   - 边界测试：
     - [x] 记账——点我记账——保存——超长金额：客户端正确提示输入“金额长度不能超过8位”
+    
+  - 改进建议(可选)：
+  
+    - [ ] 记账——点我记账——保存：成功保存客户端不给出提示，可以考虑加上提示
   
   
   
@@ -209,11 +213,14 @@ uni.scss                // 全局的样式文件
   - 标准测试：
   
     - [x] 记账——左滑账单——修改：正确修改账单信息
-  - [x] 记账——左滑账单——删除：客户端正确显示二次确认信息，正确删除账单
-  
+    - [x] 记账——左滑账单——删除：客户端正确显示二次确认信息，正确删除账单
   - 边界测试：
   
     - [x] 记账——左滑账单——修改——超长金额：客户端正确提示输入“金额长度不能超过8位”
+  
+  - 改进建议(可选)：
+  
+    - [ ] 记账——左滑账单——修改：成功保存客户端不给出提示，可以考虑加上提示
   
       
   

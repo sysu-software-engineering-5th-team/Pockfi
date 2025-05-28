@@ -173,6 +173,8 @@ uni.scss                // 全局的样式文件
     - [ ] 记账——点我记账——再记：显示“生成账单中”，并持续加载无反馈，如果此时使用返回操作中断会在“记一笔”页面无法返回、此时左上角返回按钮消失。[测试截图](#记账——点我记账——再记)
       - 初步定位：Pockfi/pagesAccount/make-an-account/make-an-account.vue——addAgain()
       
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-28</div></div>
+      
     - [x] 记账——点我记账——保存——输入金额：正确输入金额，并正确退格
     
     - [x] 记账——点我记账——保存——选择日期：正确选择日期

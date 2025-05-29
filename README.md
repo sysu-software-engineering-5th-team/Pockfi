@@ -131,7 +131,7 @@ uni.scss                // 全局的样式文件
   
     - [x] 点击隐藏按钮：正确显示用户当前支出，再次点击隐藏
   
-    - [x] 切换月份日期：正确切换月份，并显示对应账单；正确显示合理月份日期，比如当前最多为5月、2月最多28天
+    - [x] 切换月份日期：正确切换月份，并显示对应账单；正确显示合理月份日期，比如当前最多为5月
   
     - [x] 右滑切换到净资产：正确切换显示
   
@@ -147,9 +147,22 @@ uni.scss                // 全局的样式文件
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
   
+  - 标准测试：
+  
+    - [x] 切换月份日期：正确切换月份，并显示对应账单；正确显示合理月份日期，比如当前最多为5月
+    - [x] 上下滑动：正确滑动显示
+  
+    
+  
 - [X] 理财
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+  
+  - 标准测试：
+  
+    - [x] 切换利率计算器、股票分析：正确进行切换显示
+  
+      
   
 - [ ] 提醒
 
@@ -295,9 +308,33 @@ uni.scss                // 全局的样式文件
 - [X] 消费/收入柱状图
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+  
+  - 标准测试：
+  
+    - [x] 左右滑动：正确左右滑动切换显示
+  
+    - [x] 点击柱状图：正确显示柱状图对应的每日详情
+  
+    - [x] 点击支出、收入图标：正确显示或隐藏支出或收入柱状图
+  
+      
+  
 - [X] 消费类型扇形图
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+  
+  - 标准测试：
+  
+    - [x] 点击月支出、日支出：正确进行切换
+    - [x] 点击扇形图：正确显示扇形图对应的详情
+    - [x] 点击各种消费类型图标：正确显示或隐藏支出或收入扇形图
+  
+  - 改进建议(可选)：
+  
+    - [ ] 各种消费类型图标与自定义的消费类型一致
+  
+      
+  
 - [ ] 生成消费分析报告
 
 #### 4. 理财
@@ -305,9 +342,37 @@ uni.scss                // 全局的样式文件
 - [X] 计算存款利息（存款计算器）
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+  
+  - 标准测试：
+  
+    - [x] 输入金额、存款天数、年利率：正确输入金额、存款天数、年利率
+    - [x] 测算利息：点击测算，客户端正确显示预期收益、本息总计
+    - [x] 切换活期存款、定期存款：正确切换，正确进行计算
+    - [x] 重置：点击重置，客户端正确清除已经输入内容
+  
+  - 边界测试：
+  
+    - [ ] 超长金额、超长存款天数、超长年利率：正确输入金额、存款天数、年利率，并计算得到预期收益，客户端并没有给出限制？
+  
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-29</div></div>
+  
+  
+  
 - [X] 查询股票数据（K线图）
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
+  
+  - 标准测试：
+  
+    - [x] 输入股票代码、选择K线周期：正确输入股票代码、选择K线周期
+    - [x] 查询K线：正确查询K线，客户端正确显示K线
+  
+  - 边界测试：
+  
+    - [x] 输入错误股票代码：客户端正确输出错误提示
+  
+      
+  
 - [ ] 对比股票收益率
 
 #### 5. 提醒

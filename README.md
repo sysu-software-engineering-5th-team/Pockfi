@@ -1,7 +1,5 @@
 # README
 
-# README
-
 　　　　口袋智富 Pockfi
 
 　　　　原始代码：
@@ -159,7 +157,7 @@ uni.scss                // 全局的样式文件
 
   <div>
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-23</div></div>
-
+  
   
   - 标准测试：
   
@@ -173,7 +171,6 @@ uni.scss                // 全局的样式文件
   
       
   
-
 - [X] 登录
 
   <div>
@@ -224,15 +221,24 @@ uni.scss                // 全局的样式文件
 
     - [ ] 记账——点我记账——秒记1、秒记2：客户端提示“未找到绑定的模板”，没有检测到已经创建的模板
 
-      - [ ] 已分配
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-28</div></div>
+      
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已分配
+          时间: 2025-05-30</div></div>
+    
   - 边界测试：
-
+  
     - [X] 记账——点我记账——保存——超长金额：客户端正确提示输入“金额长度不能超过8位”
+    
   - 改进建议(可选)：
-
+  
     - [ ] 记账——点我记账——保存：成功保存客户端不给出提示，可以考虑加上提示
-
-      - [X] 已修复
+  
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已分配
+          时间: 2025-05-30</div></div>
+  
+  
+  
 - [X] 编辑账目记录
 
   <div>
@@ -249,11 +255,19 @@ uni.scss                // 全局的样式文件
 
     - [ ] 记账——左滑账单——修改：成功保存客户端不给出提示，可以考虑加上提示
 
-      - [X] 已修复
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已修复
+          时间: 2025-05-28</div></div>
+  
+  
+  
 - [ ] 手动编辑消费类型
+
 - [ ] 半**自动记录**消费
+
 - [ ] 反馈消费类型识别错误
+
 - [ ] 实时对照消费预算
+
 - [X] 资产模块（添加/删除/与消费记录绑定）
 
   <div>
@@ -310,7 +324,7 @@ uni.scss                // 全局的样式文件
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
           时间: 2025-05-30</div></div>
       
-      
+  
 - [X] 同名资产合并
 
   <div>
@@ -335,6 +349,7 @@ uni.scss                // 全局的样式文件
     - [X] 左右滑动：正确左右滑动切换显示
     - [X] 点击柱状图：正确显示柱状图对应的每日详情
     - [X] 点击支出、收入图标：正确显示或隐藏支出或收入柱状图
+  
 - [X] 消费类型扇形图
 
   <div>
@@ -345,9 +360,13 @@ uni.scss                // 全局的样式文件
     - [X] 点击月支出、日支出：正确进行切换
     - [X] 点击扇形图：正确显示扇形图对应的详情
     - [X] 点击各种消费类型图标：正确显示或隐藏支出或收入扇形图
+    
   - 改进建议(可选)：
-
+  
     - [ ] 各种消费类型图标与自定义的消费类型一致
+    
+      
+  
 - [ ] 生成消费分析报告
 
 #### 4. 理财
@@ -369,6 +388,9 @@ uni.scss                // 全局的样式文件
 
       <div>
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-29</div></div>
+  
+  
+  
 - [X] 查询股票数据（K线图）
 
   <div>
@@ -381,6 +403,7 @@ uni.scss                // 全局的样式文件
   - 边界测试：
 
     - [X] 输入错误股票代码：客户端正确输出错误提示
+  
 - [ ] 对比股票收益率
 
 #### 5. 提醒
@@ -458,34 +481,48 @@ uni.scss                // 全局的样式文件
   - 标准测试：
 
     - [X] 正常登录：输入正确账号、正确密码，客户端正确提示“登陆成功”
+    
   - 边界测试：
-
+  
     - [X] 密码错误：输入错误密码，客户端正确提示“密码错误”
     - [X] 账号错误：输入错误账号，客户端正确提示“此账号未注册”
     - [X] 不同意用户服务协议：客户端正确提示并可以选择同意或取消
+    
   - 改进建议(可选)：
-
+  
     - [ ] 其他登录方式
+    
+      
+  
 - [ ] 注册账号（目前可通过账密注册）
 
   - 标准测试：
 
     - [X] 账密注册：成功注册并载入数据库
+    
   - 边界测试：
-
+  
     - [ ] 重复注册：在后台有报错，但是客户端无显示
-
+  
       <div>
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-26</div></div>
     - [X] 超长用户名：客户端正确提示
     - [X] 超长昵称：客户端正确提示
     - [X] 超长密码：客户端正确限制超额输入
     - [X] 不同意用户服务协议：客户端正确提示并可以选择同意或取消
+    
   - 改进建议(可选)：
-
+  
     - [ ] 其他注册方式
+    
     - [ ] 超长密码：客户端正确限制超额输入，同时给出提示
+    
+      
+  
 - [ ] 忘记密码（已有页面模板但未实现验证手机号码）
+
+  
+
 - [X] 隐私政策
 
   <div>
@@ -493,8 +530,12 @@ uni.scss                // 全局的样式文件
 
   - 标准测试：
 
-    - [X] 隐私政策条款：客户端正确点击进入详情，正确点击返回
-    - [X] 点击勾选：客户端正确点击勾选，再次点击取消
+    - [x] 隐私政策条款：客户端正确点击进入详情，正确点击返回
+    
+    - [x] 点击勾选：客户端正确点击勾选，再次点击取消
+    
+      
+  
 - [X] 软件条约
 
   <div>
@@ -502,15 +543,19 @@ uni.scss                // 全局的样式文件
 
   - 标准测试：
 
-    - [X] 软件条约：客户端正确点击进入详情，正确点击返回
-    - [X] 点击勾选：客户端正确点击勾选，再次点击取消
+    - [x] 软件条约：客户端正确点击进入详情，正确点击返回
+    
+    - [x] 点击勾选：客户端正确点击勾选，再次点击取消
+    
+      
+  
 - [ ] 快捷登录（已有页面模板）
 
 #### 8. 管理员
 
 - [ ] 发布更新
 - [ ] 发布通知
-- [ ] 封禁异常用户
+- [x] 封禁异常用户
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="false" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-30</div></div>
 - [ ] 编辑帮助文档
 - [ ] 数据看板

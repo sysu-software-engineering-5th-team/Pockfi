@@ -257,7 +257,7 @@
 			padding-bottom: 20px;
 			.category {
 				display: flex;
-				justify-content: start;
+				justify-content: flex-start;
 				align-items: center;
 				text {
 					margin-left: 16rpx;

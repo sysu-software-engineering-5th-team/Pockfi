@@ -116,7 +116,7 @@
 		.filter-category {
 			.tags {
 				display: flex;
-				justify-content: start;
+				justify-content: flex-start;
 				flex-wrap: wrap;
 				box-sizing: border-box;
 				padding: 0 36px 10px;

@@ -616,11 +616,11 @@
 				box-shadow: rgba(0, 0, 0, 0.03) 0px 20px 25px -5px, rgba(0, 0, 0, 0.01) 0px 10px 10px -5px;
 				.left {
 					display: flex;
-					justify-content: start;
+					justify-content: flex-start;
 				}
 				.right {
 					display: flex;
-					justify-content: start;
+					justify-content: flex-start;
 				}
 			}
 			.bill-list {

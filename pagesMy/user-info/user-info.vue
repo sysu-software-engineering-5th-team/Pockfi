@@ -14,7 +14,7 @@
 						Hi {{userInfo.nickname || '朋友'}}
 					</view>
 					<view class="day">
-						{{registerDateForTitle}}加入妙记
+						{{registerDateForTitle}}加入口袋智富
 					</view>
 				</view>
 			</view>
@@ -267,7 +267,7 @@
 		}
 		.me {
 			display: flex;
-			justify-content: start;
+			justify-content: flex-start;
 			align-items: center;
 			.avatar {
 				position: relative;

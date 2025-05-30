@@ -319,7 +319,7 @@
 
 			.left {
 				display: flex;
-				justify-content: start;
+				justify-content: flex-start;
 				align-items: center;
 
 				.main {
@@ -371,7 +371,7 @@
 			}
 			.about {
 				display: flex;
-				justify-content: start;
+				justify-content: flex-start;
 				align-items: center;
 				.about-tag {
 					margin-left: 16rpx;

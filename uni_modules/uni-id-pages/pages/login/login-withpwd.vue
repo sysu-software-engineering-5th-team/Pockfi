@@ -5,7 +5,7 @@
 			<!-- 顶部logo+文字 -->
 			<view class="logo">
 				<u--image src="/static/logo.png" width="72px" height="72px" radius="20px" ></u--image>
-				<text class="title">妙记✨记录你的生活</text>
+				<text class="title">致富之路✨口袋智富</text>
 			</view>
 			<!-- 账号密码登录区域 -->
 			<uni-forms>

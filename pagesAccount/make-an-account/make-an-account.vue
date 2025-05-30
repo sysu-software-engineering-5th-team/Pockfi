@@ -161,7 +161,6 @@
 			:show="showDatetimePicker"
 			v-model="currentDate"
 			mode="datetime"
-			
 			confirmColor="#9fcba7"
 			:closeOnClickOverlay="true"
 			@close="showDatetimePicker = false"
@@ -305,7 +304,9 @@
 				secondOneData: null,
 				secondTwoData: null,
 				throttleAddSecond: throttle(this.addSecond, 5000),
-				secondId: ''
+				secondId: '',
+				navigatedFromAddAgain: false, // 新增：标记是否从"再记"跳转而来
+				isNavigatingToHome: false // 新增：防止重复跳转的状态锁
 			};
 		},
 		computed: {
@@ -326,20 +327,52 @@
 				}
 			}
 		},
-		onLoad({type,tab}) {
-			this.pageType = type ?? 'add'
-			this.initPage()
-			this.initEditPage(type,tab)
+		onLoad(options) { // 修改onLoad以接收完整options
+			uni.showLoading({
+				title: '加载中...',
+				mask: true
+			});
+			this.pageType = options.type ?? 'add'
+			if (options.from === 'addAgain') {
+			    this.navigatedFromAddAgain = true;
+			}
+			// 异步执行初始化，以便catch错误并隐藏loading
+			this.initializePageData(options);
 		},
 		onShow() {
-			// 获取用户秒记列表
-			this.getUserSeconds()
-			// 获取用户模板列表
-			this.getUserTemplate()
+			// 获取用户秒记列表和模板列表
+			// uni.showLoading 和 uni.hideLoading 由调用这些方法的外部逻辑处理，或各自方法内部保证单一实例
+			this.loadDataForShow();
 		},
 		methods: {
+			async loadDataForShow() {
+				// onShow 调用的数据加载，可以考虑是否需要独立的 loading 提示
+				// 如果这些数据对于页面立即可见部分不是强关键，可以不显示全局 loading
+				// 或者，如果希望有提示，可以在这里管理一个短时的 loading
+				try {
+					await this.getUserSeconds();
+					await this.getUserTemplate();
+				} catch (e) {
+					// console.error("loadDataForShow failed:", e) // 保留错误处理，但注释掉普通日志
+				}
+			},
+			// 新增：统一处理页面初始化逻辑，方便管理loading状态
+			async initializePageData(options) {
+				try {
+					await this.initPage(); // initPage现在应该是async
+					await this.initEditPage(options.type, options.tab); // initEditPage现在应该是async
+				} catch (error) {
+					console.error("Page initialization failed:", error);
+					uni.showToast({
+						title: '页面加载失败',
+						icon: 'none'
+					});
+				} finally {
+					uni.hideLoading();
+				}
+			},
 			// 初始化相关方法
-			initPage() {
+			async initPage() { // 修改为 async
 				// 获取分类列表，该用户所有资产信息，将用户资产信息添加对应资产icon样式
 				this.categoryIconListForExpend = getCategoryIconListForExpend()
 				this.categoryIconListForIncome = getCategoryIconListForIncome()
@@ -352,11 +385,16 @@
 				// 设置当前默认使用的资产
 				const currentAsset = this.userAssets.filter(asset => asset.default_asset === true)
 				this.currentAssetTitle = currentAsset[0]?.asset_name || currentAsset[0]?.assetStyle.title || '未选择资产'
-				// console.log('onLoad,initPage:用户资产列表',this.userAssets);
-				// 获取用户秒记列表
-				this.getUserSeconds()
-				// 获取用户模板列表
-				this.getUserTemplate()
+				// console.log('[DEBUG] initPage completed, currentAssetTitle:', this.currentAssetTitle);
+
+				// 确保在 initPage 中也等待这些数据加载完成
+				try {
+					await this.getUserSeconds();
+					await this.getUserTemplate();
+					// console.log('[DEBUG] initPage - after getUserTemplate, templateList length:', this.templateList.length);
+				} catch (error) {
+					// console.error("[DEBUG] initPage - error during getUserSeconds/getUserTemplate:", error);
+				}
 			},
 			// 给userAssets添加type值对应的assetStyle
 			addAssetStyle() {
@@ -366,7 +404,7 @@
 				// console.log('addAssetStyle',this.assets);
 			},
 			// 编辑账单||编辑模板 初始化
-			initEditPage(type,tab) {
+			async initEditPage(type,tab) { // 修改为 async
 				if(type === 'edit') {
 					// 赋值账单初始数据
 					this.editInitBill = uni.getStorageSync('mj-bill-edit')
@@ -376,12 +414,14 @@
 						success: () => {}
 					})
 					// 触发clickTab事件，index为tab
-					this.$refs.tabs.clickHandler({},tab)
+					this.$nextTick(() => {
+						this.$refs.tabs.clickHandler({},tab)
+					})
 					
 					if(tab != 2) {
 						// 如果为收入 || 支出
 						// 修改左下资产标题
-						console.log('this.editInitBill: ',this.editInitBill);
+						// console.log('this.editInitBill: ',this.editInitBill);
 						this.currentAssetTitle =  this.editInitBill.asset_id[0].asset_name || this.editInitBill.assetStyle?.title || '未选择资产'
 					} else {
 						// 如果为转账，获取转出账户的资产名
@@ -429,7 +469,7 @@
 						const temp = uni.getStorageSync('mj-user-temp-template')
 						// 设置编辑模板的id
 						this.templateEditId = temp._id
-						this.getTemp(temp)
+						await this.getTemp(temp)
 						// 删除缓存的数据
 						uni.removeStorage({
 							key: 'mj-user-temp-template',
@@ -502,9 +542,25 @@
 			chooseDate() {
 				this.showDatetimePicker = true
 			},
-			chooseTemplate() {
-				this.showTemplate = true
-				// 发起请求获取用户的模板列表数据
+			async chooseTemplate() { // 修改为 async
+				// console.log('[DEBUG] chooseTemplate called');
+				uni.showLoading({
+					title: '加载模板...',
+					mask: true
+				});
+				try {
+					// 先获取最新的模板列表
+					await this.getUserTemplate(); 
+					// console.log('[DEBUG] chooseTemplate - after getUserTemplate, templateList length:', this.templateList.length);
+					// console.log('[DEBUG] chooseTemplate - templateList content:', JSON.stringify(this.templateList));
+					this.showTemplate = true;
+				} catch (error) {
+					// console.error("[DEBUG] chooseTemplate - getUserTemplate failed:", error);
+					// 在 getUserTemplate 内部已经有 toast 提示，这里可能不需要重复
+					// uni.showToast({ title: '模板加载失败', icon: 'none' });
+				} finally {
+					uni.hideLoading(); 
+				}
 			},
 			// 用户选择的日期，返回值为时间戳（毫秒）
 			getBillDate({value}) {
@@ -568,7 +624,7 @@
 			// 用户点击再记触发
 			addAgain() {
 				if(this.pageType !== 'add') {
-					uni.showToast({title: '“再记”只可以在添加账单时使用',icon: 'none'})
+					uni.showToast({title: "再记只可以在添加账单时使用",icon: 'none'})
 					return
 				}
 				uni.showLoading({
@@ -581,36 +637,29 @@
 			// 用户点击保存按钮触发  判断类型，并触发相应逻辑
 			async tapSaveBtn() {
 				if(!uni.$u.test.amount(this.keyboardInfo.balance)) return
+				// 在实际的保存操作前显示 Loading
+				// 注意：具体的 hideLoading 和 showToast 应该在各自的 addOneBill, addOneTransfer 等方法中处理
+				// 因为 tapSaveBtn 只是一个分发器
+
 				if(this.isTemplate) {
 					// 如果是添加或编辑模板
-					if(this.isTemplateEdit) {
-						// 如果是编辑模板
-						// 通过模板id删除之前的模板
-						await db.collection('mj-user-templates').doc(this.templateEditId).remove()
-						// 根据模板id查询有无对应秒记
-						const res = await db.collection('mj-user-seconds').where(`template_id == "${this.templateEditId}"`).get()
-						// 如果存在对应秒记，则保存秒记id，在保存新模板后根据秒记id修改模板id
-						if (res.result.affectedDocs) {
-							this.secondId = res.result.data[0]._id
-						}
-					}
-					// 添加新模板
-					this.addOneTemplate()
+					// addOneTemplate 内部应处理 loading 和 toast
+					await this.addOneTemplate() // 确保 addOneTemplate 是 async 并被 await
 					return
 				}
 				if(this.isEdit) {
 					// 如果是编辑账单
-					// console.log('editInitBill',this.editInitBill);
-					// console.log('transferAccountInfo',this.transferAccountInfo);
-					// console.log('expendOrIncomeInfo',this.expendOrIncomeInfo);
-					this.updateUserBill()
+					// updateUserBill 内部应处理 loading 和 toast
+					await this.updateUserBill() // 确保 updateUserBill 是 async 并被 await
 					return
 				}
 				if(this.showTransferAccounts) {
-					this.addOneTransfer()
+					// addOneTransfer 内部应处理 loading 和 toast
+					await this.addOneTransfer() // 确保 addOneTransfer 是 async 并被 await
 					return
 				}
-				this.addOneBill()
+				// addOneBill 内部应处理 loading 和 toast
+				await this.addOneBill() // 确保 addOneBill 是 async 并被 await
 			},
 			// 添加支出||收入账单
 			async addOneBill() {
@@ -629,27 +678,56 @@
 					})
 					return
 				}
-				this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
-				this.expendOrIncomeInfo.bill_notes = this.keyboardInfo.notes
-				await db.collection("mj-user-bills").add({
-					...this.expendOrIncomeInfo
-				})
-				// 如果为再记
-				if(this.isAddAgain) {
-					await this.upDateUserAssetBalance()
-					// 更新资产缓存
-					await this.getUserAssets()
-					uni.reLaunch({
-						url:'/pagesAccount/make-an-account/make-an-account'
+				
+				uni.showLoading({
+					title: this.isAddAgain ? '生成账单中...' : '保存中...',
+					mask: true
+				});
+
+				try {
+					this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
+					this.expendOrIncomeInfo.bill_notes = this.keyboardInfo.notes
+					await db.collection("mj-user-bills").add({
+						...this.expendOrIncomeInfo
 					})
-					return
+					// 如果为再记
+					if(this.isAddAgain) {
+						await this.upDateUserAssetBalance()
+						// 更新资产缓存
+						await this.getUserAssets()
+						uni.hideLoading() // 在跳转前隐藏loading
+						uni.showToast({ title: '账单已保存', icon: 'success', duration: 1500 });
+						setTimeout(() => {
+							uni.navigateTo({
+								url:'/pagesAccount/make-an-account/make-an-account?from=addAgain&timestamp=' + Date.now()
+							})
+							this.isAddAgain = false; // 重置再记状态
+						}, 1500);
+						return
+					}
+					await this.upDateUserAssetBalance()
+					
+					uni.hideLoading();
+					uni.showToast({
+						title: '账单已保存',
+						icon: 'success',
+						duration: 2000
+					});
+					// 弹出订阅消息
+					this.subDayNotification()
+					setTimeout(() => {
+						uni.switchTab({
+							url:"/pages/index/index"
+						})
+					}, 2000);
+				} catch (error) {
+					uni.hideLoading();
+					uni.showToast({
+						title: '保存失败，请重试',
+						icon: 'none'
+					});
+					console.error("addOneBill error:", error);
 				}
-				await this.upDateUserAssetBalance()
-				// 弹出订阅消息
-				this.subDayNotification()
-				uni.switchTab({
-					url:"/pages/index/index"
-				})
 			},
 			
 			// 添加转账账单
@@ -660,38 +738,66 @@
 				// 表单验证失败返回false，成功返回true
 				const flag = await this.validatorTransferInfo()
 				if(!flag) return
-				this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
-				this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
-				this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
-				// 组合备注
-				const transferOutAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id)
-				const transferOutTitle = transferOutAsset.asset_name || transferOutAsset.assetStyle.title
-				const transferInAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.destination_asset_id)
-				const transferInTitle = transferInAsset.asset_name || transferInAsset.assetStyle.title
-				this.transferAccountInfo.bill_notes = `${this.transferAccountInfo.bill_notes + '-'}${transferOutTitle}转出至${transferInTitle},手续费${this.transferAccountInfo.bill_amount / 100}元`
-				// console.log('数据整理完毕，准备存入数据库',this.transferAccountInfo);
-				await db.collection("mj-user-bills").add({...this.transferAccountInfo})
-				// 如果为再记
-				if(this.isAddAgain) {
+				
+				uni.showLoading({
+					title: this.isAddAgain ? '生成账单中...' : '保存中...',
+					mask: true
+				});
+
+				try {
+					this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
+					this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
+					this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
+					// 组合备注
+					const transferOutAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id)
+					const transferOutTitle = transferOutAsset.asset_name || transferOutAsset.assetStyle.title
+					const transferInAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.destination_asset_id)
+					const transferInTitle = transferInAsset.asset_name || transferInAsset.assetStyle.title
+					this.transferAccountInfo.bill_notes = `${this.transferAccountInfo.bill_notes + '-'}${transferOutTitle}转出至${transferInTitle},手续费${this.transferAccountInfo.bill_amount / 100}元`
+					await db.collection("mj-user-bills").add({...this.transferAccountInfo})
+					// 如果为再记
+					if(this.isAddAgain) {
+						await this.upDateUserTwoAssetBalance()
+						// 更新资产缓存
+						await this.getUserAssets()
+						uni.hideLoading() // 在跳转前隐藏loading
+						uni.showToast({ title: '账单已保存', icon: 'success', duration: 1500 });
+						setTimeout(() => {
+							uni.navigateTo({
+								url:'/pagesAccount/make-an-account/make-an-account?from=addAgain&timestamp=' + Date.now()
+							})
+							this.isAddAgain = false; // 重置再记状态
+						}, 1500);
+						return
+					}
 					await this.upDateUserTwoAssetBalance()
-					// 更新资产缓存
-					await this.getUserAssets()
-					uni.reLaunch({
-						url:'/pagesAccount/make-an-account/make-an-account'
-					})
-					return
+					
+					uni.hideLoading();
+					uni.showToast({
+						title: '账单已保存',
+						icon: 'success',
+						duration: 2000
+					});
+					// 弹出订阅消息
+					this.subDayNotification()
+					setTimeout(() => {
+						uni.switchTab({
+							url:"/pages/index/index"
+						})
+					}, 2000);
+				} catch (error) {
+					uni.hideLoading();
+					uni.showToast({
+						title: '保存失败，请重试',
+						icon: 'none'
+					});
+					console.error("addOneTransfer error:", error);
 				}
-				await this.upDateUserTwoAssetBalance()
-				// 弹出订阅消息
-				this.subDayNotification()
-				uni.switchTab({
-					url:"/pages/index/index"
-				})
 			},
 			// 转账账单表单验证
 			async validatorTransferInfo() {
 				if(!this.isSetRules) {
-					console.log('setRules', this.$refs)
+					// console.log('setRules', this.$refs)
 					this.$refs.uForm.setRules(this.rules)
 					this.isSetRules = true
 				}
@@ -737,7 +843,7 @@
 				let assetBalance = this.userAssets.find(item => item._id === this.expendOrIncomeInfo.asset_id).asset_balance
 				assetBalance = Math.round(assetBalance * 100)  // 转换单位为分
 				// console.log(assetBalance);
-				console.log('bill_type',this.expendOrIncomeInfo.bill_type);
+				// console.log('bill_type',this.expendOrIncomeInfo.bill_type);
 				if(this.expendOrIncomeInfo.bill_type === 0) {
 					const asset_balance = assetBalance - this.expendOrIncomeInfo.bill_amount
 					await db.collection("mj-user-assets").doc(this.expendOrIncomeInfo.asset_id).update({
@@ -752,7 +858,9 @@
 				uni.$emit('updateBillsList')
 				uni.$emit('updateMonthlyBillBalance')
 				// 等待资产异步更新完成
-				await this.asyncEmitUpdateAssets()
+				if (!this.isAddAgain) { // 如果不是"再记"，则触发首页资产更新（不等待）
+				    this.asyncEmitUpdateAssets();
+				}
 			},
 			// 更新用户 转出与转入 资产金额
 			async upDateUserTwoAssetBalance() {
@@ -775,89 +883,113 @@
 				uni.$emit('updateBillsList')
 				uni.$emit('updateMonthlyBillBalance')
 				// 等待资产异步更新完成
-				await this.asyncEmitUpdateAssets()
+				if (!this.isAddAgain) { // 如果不是"再记"，则触发首页资产更新（不等待）
+				    this.asyncEmitUpdateAssets();
+				}
 			},
 			
 			
 			// 编辑账单相关方法
 			// 更新用户账单bill
 			async updateUserBill() {
-				// 1 判断用户支出||收入||转账
-				// 2 进行表单验证
-				// 3 验证通过，更新bill，并更新资产
-				if(this.showTransferAccounts) {
-					// 类型为转账
-					// 验证资产id对应的资产是否存在（未被用户删除）
-					const hasAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id) ?? 'none'
-					if(hasAsset === 'none') {
-						uni.showToast({
-							title:"请更新资产",
-							icon:"none"
+				uni.showLoading({
+					title: '更新中...',
+					mask: true
+				});
+				try {
+					// 1 判断用户支出||收入||转账
+					// 2 进行表单验证
+					// 3 验证通过，更新bill，并更新资产
+					if(this.showTransferAccounts) {
+						// 类型为转账
+						// ... (省略部分验证和数据准备代码) ...
+						const hasAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id) ?? 'none'
+						if(hasAsset === 'none') {
+							uni.showToast({
+								title:"请更新资产",
+								icon:"none"
+							})
+							return // 需要在 uni.hideLoading() 之前 return
+						}
+						// 表单验证失败返回false，成功返回true
+						const flag = await this.validatorTransferInfo()
+						if(!flag) {
+							// validatorTransferInfo 内部已经 showToast 了，这里不需要重复
+							uni.hideLoading(); // 确保在验证失败时也隐藏loading
+							return
+						}
+						this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
+						this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
+						this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
+						await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
+							asset_id: this.transferAccountInfo.asset_id,
+							bill_amount: this.transferAccountInfo.bill_amount,
+							bill_date: this.transferAccountInfo.bill_date,
+							bill_notes: this.transferAccountInfo.bill_notes,
+							bill_type: 2,
+							category_type: 'transfer',
+							destination_asset_id: this.transferAccountInfo.destination_asset_id,
+							transfer_amount: this.transferAccountInfo.transfer_amount
 						})
-						return
-					}
-					// 表单验证失败返回false，成功返回true
-					const flag = await this.validatorTransferInfo()
-					if(!flag) return
-					this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
-					this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
-					this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
-					// console.log('数据整理完毕，准备更新数据库',this.transferAccountInfo);
-					await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
-						asset_id: this.transferAccountInfo.asset_id,
-						bill_amount: this.transferAccountInfo.bill_amount,
-						bill_date: this.transferAccountInfo.bill_date,
-						bill_notes: this.transferAccountInfo.bill_notes,
-						bill_type: 2,
-						category_type: 'transfer',
-						destination_asset_id: this.transferAccountInfo.destination_asset_id,
-						transfer_amount: this.transferAccountInfo.transfer_amount
-					})
-					// 返还资金模块
-					// console.log('返还资金模块');
-					await this.updateInitAssetsBalance()
 					// 更新金额模块
-					await this.upDateUserTwoAssetBalance()
-				} else {
-					// 类型为支出 || 收入
-					// 验证资产id对应的资产是否存在（未被用户删除）
-					const hasAsset = this.userAssets.find(item => item._id === this.expendOrIncomeInfo.asset_id) ?? 'none'
-					if(hasAsset === 'none') {
-						uni.showToast({
-							title:"请更新资产",
-							icon:"none"
+						await this.updateInitAssetsBalance()
+					// 更新金额模块
+						await this.upDateUserTwoAssetBalance()
+					} else {
+						// 类型为支出 || 收入
+						// ... (省略部分验证和数据准备代码) ...
+						const hasAsset = this.userAssets.find(item => item._id === this.expendOrIncomeInfo.asset_id) ?? 'none'
+						if(hasAsset === 'none') {
+							uni.showToast({
+								title:"请更新资产",
+								icon:"none"
+							})
+							return // 需要在 uni.hideLoading() 之前 return
+						}
+						// 金额不能为0
+						if(Number(this.keyboardInfo.balance) === 0) {
+							uni.showToast({
+								title:"请填写金额",
+								icon:"none"
+							})
+							uni.hideLoading(); // 确保在验证失败时也隐藏loading
+							return
+						}
+						this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
+						this.expendOrIncomeInfo.bill_notes =this.keyboardInfo.notes
+						await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
+							asset_id: this.expendOrIncomeInfo.asset_id,
+							bill_amount: this.expendOrIncomeInfo.bill_amount,
+							bill_date: this.expendOrIncomeInfo.bill_date,
+							bill_notes: this.expendOrIncomeInfo.bill_notes,
+							bill_type: this.expendOrIncomeInfo.bill_type,
+							category_type: this.expendOrIncomeInfo.category_type,
+							transfer_amount: 0
 						})
-						return
-					}
-					// 金额不能为0
-					if(Number(this.keyboardInfo.balance) === 0) {
-						uni.showToast({
-							title:"请填写金额",
-							icon:"none"
-						})
-						return
-					}
-					this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
-					this.expendOrIncomeInfo.bill_notes =this.keyboardInfo.notes
-					await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
-						asset_id: this.expendOrIncomeInfo.asset_id,
-						bill_amount: this.expendOrIncomeInfo.bill_amount,
-						bill_date: this.expendOrIncomeInfo.bill_date,
-						bill_notes: this.expendOrIncomeInfo.bill_notes,
-						bill_type: this.expendOrIncomeInfo.bill_type,
-						category_type: this.expendOrIncomeInfo.category_type,
-						transfer_amount: 0
-					})
-					
-					// 返还资产金额模块
-					console.log('返还资金模块');
-					await this.updateInitAssetsBalance()
 					// 更新资产金额模块
-					await this.upDateUserAssetBalance()
+						await this.updateInitAssetsBalance()
+					// 更新资产金额模块
+						await this.upDateUserAssetBalance()
+					}
+					uni.hideLoading();
+					uni.showToast({
+						title: '账单已更新', // 编辑时提示已更新
+						icon: 'success',
+						duration: 2000
+					});
+					setTimeout(() => {
+						uni.switchTab({
+							url:"/pages/index/index"
+						})
+					}, 2000);
+				} catch (error) {
+					uni.hideLoading();
+					uni.showToast({
+						title: '更新失败，请重试',
+						icon: 'none'
+					});
+					console.error("updateUserBill error:", error);
 				}
-				uni.switchTab({
-					url:"/pages/index/index"
-				})
 			},
 			// 返还用户初始资产金额  1 判断用户初始资产类型 0 支出 1 收入 2转账
 			async updateInitAssetsBalance() {
@@ -865,7 +997,7 @@
 					// 返还 转入转出账户的余额
 					let transferOutAssetBalance = this.userAssets.find(item => item._id === this.editInitBill.asset_id)?.asset_balance ?? 'none'
 					let transferIntoAssetBalance = this.userAssets.find(item => item._id === this.editInitBill.destination_asset_id)?.asset_balance ?? 'none'
-					console.log('transferIntoAssetBalance',transferIntoAssetBalance);
+					// console.log('transferIntoAssetBalance',transferIntoAssetBalance);
 					// 转换单位为分
 					const bill_amount = Math.round(this.editInitBill.bill_amount * 100)
 					const transfer_amount = Math.round(this.editInitBill.transfer_amount * 100)
@@ -879,7 +1011,7 @@
 						await db.collection("mj-user-assets").doc(this.editInitBill.asset_id).update({
 							asset_balance: transferOutAssetBalance
 						})
-						console.log("返还转出账户");
+						// console.log("返还转出账户");
 						// 单位为元  更新用户资产列表的对应资产金额，以便后续 更新用户资产计算金额使用
 						this.userAssets.find(item => item._id === this.editInitBill.asset_id).asset_balance += this.editInitBill.bill_amount + this.editInitBill.transfer_amount
 					}
@@ -890,7 +1022,7 @@
 						await db.collection("mj-user-assets").doc(this.editInitBill.destination_asset_id).update({
 							asset_balance: transferIntoAssetBalance
 						})
-						console.log("返还转入账户");
+						// console.log("返还转入账户");
 						this.userAssets.find(item => item._id === this.editInitBill.destination_asset_id).asset_balance -= this.editInitBill.transfer_amount
 					}
 					
@@ -899,7 +1031,7 @@
 					// 如果初始bill中资产id找不到 为none，则不用返还
 					let assetBalance = this.userAssets.find(item => item._id === this.editInitBill.asset_id)?.asset_balance ?? 'none'
 					if(assetBalance === 'none') return
-					console.log("返还");
+					// console.log("返还");
 					assetBalance = Math.round(assetBalance * 100)  // 转换单位为分
 					const bill_amount = Math.round(this.editInitBill.bill_amount * 100)
 					if(this.editInitBill.bill_type == 0) {
@@ -921,67 +1053,79 @@
 			},
 			/** 添加模板相关方法 */
 			async addOneTemplate() {
-				// 1 判断用户支出||收入||转账
-				// 2 进行表单验证
-				// 3 验证通过，保存模板，并回到上一页
-				if(!this.showTransferAccounts) {
-					// 类型为支出||收入
-					// 金额不能为0
-					if(Number(this.keyboardInfo.balance) === 0) {
-						uni.showToast({
-							title:"请填写金额",
-							icon:"none"
+				uni.showLoading({
+					title: this.isTemplateEdit ? '更新模板中...' : '保存模板中...',
+					mask: true
+				});
+				try {
+					// 1 判断用户支出||收入||转账
+					// 2 进行表单验证
+					// 3 验证通过，保存模板，并回到上一页
+					if(!this.showTransferAccounts) {
+						// ... (省略验证逻辑 - 假设它们会 showToast 并 return) ...
+						if(Number(this.keyboardInfo.balance) === 0) {
+							uni.showToast({ title:"请填写金额", icon:"none" });
+							uni.hideLoading(); return;
+						}
+						if(!this.expendOrIncomeInfo.asset_id) {
+							uni.showToast({ title:"请选择资产", icon:"none" });
+							uni.hideLoading(); return;
+						}
+						this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
+						this.expendOrIncomeInfo.bill_notes = this.keyboardInfo.notes
+						const {asset_id,bill_amount,bill_notes,bill_type,category_type} = this.expendOrIncomeInfo
+						const res = await db.collection("mj-user-templates").add({
+							asset_id,bill_amount,bill_notes,bill_type,category_type
 						})
-						return
+						// 如果秒记id不为空，即修改的模板有对应绑定的秒记
+						if (this.secondId) {
+							// 更新秒记的模板id
+							const templateId = res.result.id
+							await this.updateSecondTempId(this.secondId, templateId)
+						}
+					} else {
+						// 类型为转账
+						// ... (省略验证逻辑 - 假设 validatorTransferInfo 会 showToast 并 return false) ...
+						const flag = await this.validatorTransferInfo()
+						if(!flag) {
+							uni.hideLoading(); // validatorTransferInfo 内部有 toast
+							return;
+						}
+						this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
+						this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
+						this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
+						// ... (组合备注) ...
+						const transferOutAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id)
+						const transferOutTitle = transferOutAsset.asset_name || transferOutAsset.assetStyle.title
+						const transferInAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.destination_asset_id)
+						const transferInTitle = transferInAsset.asset_name || transferInAsset.assetStyle.title
+						this.transferAccountInfo.bill_notes = `${this.transferAccountInfo.bill_notes + '-'}${transferOutTitle}转出至${transferInTitle},手续费${this.transferAccountInfo.bill_amount / 100}元`
+						const {asset_id,bill_amount,bill_notes,bill_type,category_type,destination_asset_id,transfer_amount} = this.transferAccountInfo
+						const res = await db.collection("mj-user-templates").add({asset_id, bill_amount, bill_type, category_type, destination_asset_id, transfer_amount, bill_notes})
+						// 如果秒记id不为空，即修改的模板有对应绑定的秒记
+						if (this.secondId) {
+							// 更新秒记的模板id
+							const templateId = res.result.id
+							await this.updateSecondTempId(this.secondId, templateId)
+						}
 					}
-					if(!this.expendOrIncomeInfo.asset_id) {
-						uni.showToast({
-							title:"请选择资产",
-							icon:"none"
-						})
-						return
-					}
-					this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
-					this.expendOrIncomeInfo.bill_notes = this.keyboardInfo.notes
-					const {asset_id,bill_amount,bill_notes,bill_type,category_type} = this.expendOrIncomeInfo
-					const res = await db.collection("mj-user-templates").add({
-						asset_id,bill_amount,bill_notes,bill_type,category_type
-					})
-					// 如果秒记id不为空，即修改的模板有对应绑定的秒记
-					if (this.secondId) {
-						// 更新秒记的模板id
-						const templateId = res.result.id
-						await this.updateSecondTempId(this.secondId, templateId)
-					}
-				} else {
-					// 类型为转账
-					// 添加转账账单
-					// 1 验证手续费格式
-					// 2 验证转出转入账户是否都存在，并且不相同
-					// 3 存入bill_amount，存入keyboard信息，金额不准为0
-					// 表单验证失败返回false，成功返回true
-					const flag = await this.validatorTransferInfo()
-					if(!flag) return
-					this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
-					this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
-					this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
-					// 组合备注
-					const transferOutAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id)
-					const transferOutTitle = transferOutAsset.asset_name || transferOutAsset.assetStyle.title
-					const transferInAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.destination_asset_id)
-					const transferInTitle = transferInAsset.asset_name || transferInAsset.assetStyle.title
-					this.transferAccountInfo.bill_notes = `${this.transferAccountInfo.bill_notes + '-'}${transferOutTitle}转出至${transferInTitle},手续费${this.transferAccountInfo.bill_amount / 100}元`
-					// console.log('数据整理完毕，准备存入数据库',this.transferAccountInfo);
-					const {asset_id,bill_amount,bill_notes,bill_type,category_type,destination_asset_id,transfer_amount} = this.transferAccountInfo
-					const res = await db.collection("mj-user-templates").add({asset_id, bill_amount, bill_type, category_type, destination_asset_id, transfer_amount, bill_notes})
-					// 如果秒记id不为空，即修改的模板有对应绑定的秒记
-					if (this.secondId) {
-						// 更新秒记的模板id
-						const templateId = res.result.id
-						await this.updateSecondTempId(this.secondId, templateId)
-					}
+					uni.hideLoading();
+					uni.showToast({
+						title: this.isTemplateEdit ? '模板已更新' : '模板已保存',
+						icon: 'success',
+						duration: 1500
+					});
+					setTimeout(() => {
+						uni.navigateBack()
+					}, 1500);
+				} catch (error) {
+					uni.hideLoading();
+					uni.showToast({
+						title: this.isTemplateEdit ? '模板更新失败' : '模板保存失败',
+						icon: 'none'
+					});
+					console.error("addOneTemplate error:", error);
 				}
-				uni.navigateBack()
 			},
 			// 点击添加模板按钮
 			goTemplatePage() {
@@ -992,62 +1136,105 @@
 			},
 			// 获取用户的模板
 			async getUserTemplate() {
-				const temp = db.collection('mj-user-templates').where('user_id == $cloudEnv_uid').orderBy('template_creation_date desc').getTemp()
-				const userAssets = db.collection("mj-user-assets").where('user_id == $cloudEnv_uid').field('_id,asset_type,user_id,asset_name').getTemp()
-				const res = await db.collection(temp, userAssets).get()
-				this.templateList = res.result.data
+				// console.log('[DEBUG] getUserTemplate called'); // 已被注释或移除
+				try {
+					const temp = db.collection('mj-user-templates').where('user_id == $cloudEnv_uid').orderBy('template_creation_date desc').getTemp()
+					const userAssets = db.collection("mj-user-assets").where('user_id == $cloudEnv_uid').field('_id,asset_type,user_id,asset_name').getTemp()
+					const res = await db.collection(temp, userAssets).get()
+					// console.log('[DEBUG] getUserTemplate - raw response from DB:', JSON.stringify(res)); // 已被注释或移除
+					if (res.result && res.result.data) {
+						this.templateList = res.result.data;
+						// console.log('[DEBUG] getUserTemplate - success, templateList length:', this.templateList.length); // 已被注释或移除
+					} else {
+						this.templateList = []; // 确保是数组
+						// console.warn('[DEBUG] getUserTemplate - no data in response or bad format, res:', res); // 已被注释或移除
+					}
+				} catch (error) {
+					this.templateList = []; // 确保是数组
+					console.error("[SYSTEM] getUserTemplate error:", error); // 保留错误日志
+					uni.showToast({ title: '模板加载失败', icon: 'none' });
+				}
 			},
 			// 点击模板卡片||编辑模板 触发，获取用户点击的模板数据，并赋值
-			getTemp(temp) {
-				console.log('temp: ',temp);
-				const {bill_type, category_type, bill_notes, bill_amount, asset_id, hasAsset, transfer_amount, hasDestinationAsset, destination_asset_id} = temp
-				// 触发clickTab事件，index为bill_type
-				this.$refs.tabs.clickHandler({},bill_type)
-				if(bill_type !== 2) {
-					// 支出||收入模板
-					// 账单类型
-					this.expendOrIncomeInfo.bill_type = bill_type
-					// 分类
-					this.expendOrIncomeInfo.category_type = category_type
-					if(bill_type === 0) {
-						const index = this.categoryIconListForExpend.findIndex(item => item.type === category_type)
-						this.currentExpendIndex = index
-					} else {
-						const index = this.categoryIconListForIncome.findIndex(item => item.type === category_type)
-						this.currentIncomeIndex = index
+			async getTemp(temp) { // 修改为 async，并添加加载框
+				// console.log('[DEBUG] make-an-account: getTemp called with temp object:', JSON.stringify(temp));
+				uni.showLoading({ title: '应用模板...', mask: true });
+				try {
+					const {bill_type, category_type, bill_notes, bill_amount, asset_id, hasAsset, transfer_amount, hasDestinationAsset, destination_asset_id} = temp;
+					// console.log(`[DEBUG] make-an-account:getTemp - Destructured data: bill_type=${bill_type}, category_type=${category_type}, notes=${bill_notes}, bill_amount=${bill_amount} (raw from temp), transfer_amount=${transfer_amount} (raw from temp)`);
+
+					// 触发clickTab事件，index为bill_type
+					// console.log(`[DEBUG] make-an-account:getTemp - About to call clickHandler for bill_type: ${bill_type}`);
+					await new Promise(resolve => {
+						this.$nextTick(() => {
+							if (this.$refs.tabs && typeof this.$refs.tabs.clickHandler === 'function') {
+								this.$refs.tabs.clickHandler({},bill_type);
+								// console.log(`[DEBUG] make-an-account:getTemp - clickHandler called for bill_type: ${bill_type}`);
+							} else {
+								console.error('[SYSTEM] make-an-account:getTemp - $refs.tabs or clickHandler not available.'); // 保留错误日志
+							}
+							resolve();
+						})
+					});
+					// console.log(`[DEBUG] make-an-account:getTemp - After clickHandler. Current tab state: showExpend=${this.showExpend}, showIncome=${this.showIncome}, showTransferAccounts=${this.showTransferAccounts}`);
+
+					if(bill_type !== 2) { // 支出||收入模板
+						// console.log('[DEBUG] make-an-account:getTemp - Applying non-transfer template.');
+						this.expendOrIncomeInfo.bill_type = bill_type;
+						this.expendOrIncomeInfo.category_type = category_type;
+						// console.log(`[DEBUG] make-an-account:getTemp - expendOrIncomeInfo updated: bill_type=${this.expendOrIncomeInfo.bill_type}, category_type=${this.expendOrIncomeInfo.category_type}`);
+
+						if(bill_type === 0) {
+							const index = this.categoryIconListForExpend.findIndex(item => item.type === category_type);
+							this.currentExpendIndex = index;
+							// console.log(`[DEBUG] make-an-account:getTemp - currentExpendIndex set to: ${index}`);
+						} else {
+							const index = this.categoryIconListForIncome.findIndex(item => item.type === category_type);
+							this.currentIncomeIndex = index;
+							// console.log(`[DEBUG] make-an-account:getTemp - currentIncomeIndex set to: ${index}`);
+						}
+						this.keyboardInfo.notes = bill_notes;
+						this.keyboardInfo.balance = (temp.bill_amount).toFixed(2); 
+						// console.log(`[DEBUG] make-an-account:getTemp - keyboardInfo updated: notes=${this.keyboardInfo.notes}, balance=${this.keyboardInfo.balance}`);
+
+						if(hasAsset && asset_id && asset_id[0]) {
+							this.expendOrIncomeInfo.asset_id = asset_id[0]._id;
+							this.currentAssetTitle = asset_id[0].asset_name || temp.assetStyle.title;
+							// console.log(`[DEBUG] make-an-account:getTemp - Asset applied: id=${this.expendOrIncomeInfo.asset_id}, title=${this.currentAssetTitle}`);
+						} else {
+							this.expendOrIncomeInfo.asset_id = '';
+							this.currentAssetTitle = '资产已删除';
+							// console.log('[DEBUG] make-an-account:getTemp - Asset was deleted or not available.');
+						}
+					} else { // 转账模板
+						// console.log('[DEBUG] make-an-account:getTemp - Applying transfer template.');
+						const regex = /^([^-\n]+)/;
+						const match = regex.exec(bill_notes);
+						this.keyboardInfo.notes = match ? match[1] : '';
+						
+						this.keyboardInfo.balance = (temp.transfer_amount).toFixed(2); 
+						this.transferInfo.serviceCharge = (temp.bill_amount).toFixed(2); 
+						// console.log(`[DEBUG] make-an-account:getTemp - Transfer keyboardInfo: notes=${this.keyboardInfo.notes}, balance=${this.keyboardInfo.balance}`);
+						// console.log(`[DEBUG] make-an-account:getTemp - Transfer serviceCharge: ${this.transferInfo.serviceCharge}`);
+
+						if(hasAsset && asset_id && asset_id[0]) {
+							this.transferAccountInfo.asset_id = asset_id[0]._id;
+							this.transferOutAssetStyle = {...temp.assetStyle, asset_name: asset_id[0].asset_name};
+							// console.log(`[DEBUG] make-an-account:getTemp - Transfer Out Asset: id=${this.transferAccountInfo.asset_id}, name=${asset_id[0].asset_name}`);
+						}
+						if(hasDestinationAsset && destination_asset_id && destination_asset_id[0]) {
+							this.transferAccountInfo.destination_asset_id = destination_asset_id[0]._id;
+							this.transferIntoAssetStyle = {...temp.destinationAssetStyle, asset_name: destination_asset_id[0].asset_name};
+							// console.log(`[DEBUG] make-an-account:getTemp - Transfer In Asset: id=${this.transferAccountInfo.destination_asset_id}, name=${destination_asset_id[0].asset_name}`);
+						}
 					}
-					// 备注
-					this.keyboardInfo.notes = bill_notes
-					// 金额
-					this.keyboardInfo.balance = bill_amount.toString()
-					// 资产
-					if(hasAsset) {
-						this.expendOrIncomeInfo.asset_id = asset_id[0]._id
-						this.currentAssetTitle = asset_id[0].asset_name || temp.assetStyle.title
-					} else {
-						this.expendOrIncomeInfo.asset_id = ''
-						this.currentAssetTitle = '资产已删除'
-					}
-				} else {
-					// 转账模板
-					// 账单类型和分类类型不变
-					// 备注 只截取 - 前面的值
-					const regex = /^([^-\n]+)/
-					const match = regex.exec(bill_notes)
-					this.keyboardInfo.notes = match ? match[1] : ''
-					// 金额
-					this.keyboardInfo.balance = (transfer_amount / 100).toString()
-					// 手续费
-					this.transferInfo.serviceCharge = bill_amount
-					// 转出账户
-					if(hasAsset) {
-						this.transferAccountInfo.asset_id = asset_id[0]._id
-						this.transferOutAssetStyle = {...temp.assetStyle, asset_name: asset_id[0].asset_name}
-					}
-					if(hasDestinationAsset) {
-						this.transferAccountInfo.destination_asset_id = destination_asset_id[0]._id
-						this.transferIntoAssetStyle = {...temp.destinationAssetStyle, asset_name: destination_asset_id[0].asset_name}
-					}
+					this.showTemplate = false;
+					// console.log('[DEBUG] make-an-account:getTemp - Template applied, popup closed.');
+				} catch (error) {
+					console.error("[SYSTEM] getTemp error:", error); // 保留错误日志
+					uni.showToast({ title: '模板应用失败', icon: 'none' });
+				} finally {
+					uni.hideLoading();
 				}
 				this.showTemplate = false
 			},
@@ -1064,22 +1251,31 @@
 			},
 			/** 秒记相关方法 */
 			async getUserSeconds() {
-				const res = await db.collection('mj-user-seconds').where('user_id == $cloudEnv_uid').get()
-				res.result.data.forEach(item => {
-					if (item.second_type === 1) {
-						this.secondOneData = item
-					} 
-					if (item.second_type === 2) {
-						this.secondTwoData = item
-					}
-				})
+				// 移除独立的 loading，由调用方管理
+				// uni.showLoading({ title: '获取秒记...', mask: true }); 
+				try {
+					const res = await db.collection('mj-user-seconds').where('user_id == $cloudEnv_uid').get()
+					res.result.data.forEach(item => {
+						if (item.second_type === 1) {
+							this.secondOneData = item
+						} 
+						if (item.second_type === 2) {
+							this.secondTwoData = item
+						}
+					})
+				} catch (error) {
+					console.error("getUserSeconds error:", error);
+					uni.showToast({ title: '秒记信息加载失败', icon: 'none' });
+				} finally {
+					// uni.hideLoading(); // 移除
+				}
 			},
-			addSecond(secondName) {
+			async addSecond(secondName) { // 修改为 async
 				// 判断是否为新增账单，若不是则return
 				if (this.pageType !== 'add') {
 					uni.showToast({
 						icon: 'none',
-						title: '“秒记”只可以在添加账单时使用'
+						title: "秒记只可以在添加账单时使用"
 					})
 					return
 				}
@@ -1089,8 +1285,8 @@
 					if (index !== -1) {
 						// 格式化模板
 						const temp = formatOneTemplate(this.templateList[index])
-						this.getTemp(temp)
-						this.tapSaveBtn()
+						await this.getTemp(temp) // 等待模板应用
+						await this.tapSaveBtn() // 等待保存
 					} else {
 						uni.showToast({
 							icon: 'none',
@@ -1102,8 +1298,8 @@
 					if (index !== -1) {
 						// 格式化模板
 						const temp = formatOneTemplate(this.templateList[index])
-						this.getTemp(temp)
-						this.tapSaveBtn()
+						await this.getTemp(temp) // 等待模板应用
+						await this.tapSaveBtn() // 等待保存
 					} else {
 						uni.showToast({
 							icon: 'none',
@@ -1126,6 +1322,25 @@
 			subDayNotification() {
 				subscribeMessage(['n2kSsJNErg1EWpRrKqTDz2yZvyqC-LH7pLmudAsWNDE'])
 			}
+		},
+		// 新增onBackPress生命周期函数
+		onBackPress(options) {
+		    if (this.navigatedFromAddAgain && !this.isNavigatingToHome) {
+		        // options.from 的值有 'backbutton'、'navigateBack'
+		        if (options.from === 'backbutton' || options.from === 'navigateBack') {
+		            this.isNavigatingToHome = true; // 设置状态锁，防止重复执行
+		            uni.switchTab({
+		                url: '/pages/index/index',
+		                complete: () => {
+		                    // 可选：如果需要，在跳转完成后重置状态锁，但对于switchTab通常不需要
+		                    // this.isNavigatingToHome = false; 
+		                }
+		            });
+		            return true; // 返回true表示拦截默认返回行为
+		        }
+		    }
+		    this.isNavigatingToHome = false; // 如果未处理或允许默认行为，重置状态锁
+		    return false; // 返回false表示不拦截默认返回行为（继续执行返回栈）
 		}
 	}
 </script>
@@ -1186,7 +1401,7 @@
 					margin-bottom: 32rpx;
 					.left {
 						display: flex;
-						justify-content: start;
+						justify-content: flex-start;
 						align-items: center;
 						.left-icon {
 							margin-right: 10px;
@@ -1203,19 +1418,19 @@
 			box-sizing: border-box;
 			padding: 10px;
 			background-color: $mj-bg-color;
-			overflow: visible;
+			overflow: hidden;
 			border-radius: 20px;
 			.top {
 				display: flex;
-				justify-content: center;
+				justify-content: flex-end;
 				align-items: center;
 				padding-bottom: 10px;
 				.add {
 					color: $mj-text-color;
-					font-size: 32rpx;
-					font-weight: bold;
+					font-size: 24rpx;
 					box-sizing: border-box;
 					padding: 4px 8px;
+					border-bottom: 2px solid $mj-theme-color;
 				}
 			}
 
@@ -1233,13 +1448,13 @@
 				right: 0;
 				.tags {
 					display: flex;
-					justify-content: start;
+					justify-content: flex-start;
 					background-color: $mj-bg-color;
 					padding: 4px 0;
 					.item {
 						margin-right: 20rpx;
 						display: flex;
-						justify-content: start;
+						justify-content: flex-start;
 						align-items: center;
 						box-sizing: border-box;
 						padding: 12rpx;
@@ -1314,7 +1529,7 @@
 				}
 			}
 			.template-list {
-				max-height: 750rpx;
+				max-height: 450rpx; // 调整最大高度以限制弹窗高度
 				overflow: auto;
 			}
 		}

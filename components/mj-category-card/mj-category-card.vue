@@ -62,7 +62,7 @@
 	align-items: center;
 	.left {
 		display: flex;
-		justify-content: start;
+		justify-content: flex-start;
 		align-items: center;
 		.main {
 			margin-left: 20rpx;

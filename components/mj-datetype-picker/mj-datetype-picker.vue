@@ -129,7 +129,7 @@
 <style lang="scss" scoped>
 	.datetype-picker>.item {
 		display: flex;
-		justify-content: start;
+		justify-content: flex-start;
 		align-items: center;
 		// 5.24 添加右边距
 		padding-right: 8rpx;

@@ -98,7 +98,7 @@
 					'transition': 'bottom 0.3s'
 				},
 				btnStyle: {
-					'width': '200rpx'
+					'width': '200rpx',
 				},
 				// 弹出框的模板数据
 				popTemplate: null,

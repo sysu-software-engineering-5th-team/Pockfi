@@ -159,10 +159,11 @@
 					if (newAssetsFromDB && Array.isArray(newAssetsFromDB)) {
 						// 基于 prop 创建一个新的、响应式的本地 assets 列表
 						this.assets = newAssetsFromDB.map(asset => {
-							const matchedStyle = this.assetsStyle.find(style => style.type === asset.asset_type);
+							// 优先使用 asset 对象上已有的 assetStyle
+							const styleToUse = asset.assetStyle || this.assetsStyle.find(style => style.type === asset.asset_type) || this.defaultAssetStyle;
 							return {
 								...asset, // 展开原始资产属性
-								assetStyle: matchedStyle || this.defaultAssetStyle // 添加或更新 assetStyle
+								assetStyle: styleToUse // 使用已有的或新查找到的 assetStyle
 							};
 						});
 					} else {

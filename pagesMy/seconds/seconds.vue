@@ -52,8 +52,9 @@
 				<uni-section title="绑定模板" type="line" titleFontSize="32rpx" titleColor="#212121" :white="true" />
 				<mj-bill-one-template  :oneTemplate="popTemplate" @click.native="showTempSelect"></mj-bill-one-template>
 			</view>
-			<view style="margin-top: 12rpx;">
-				<u-button shape="circle" type="primary" text="保存" :customStyle="btnStyle" size="normal" @click="saveSecond"></u-button>
+			<view class="pop-buttons">
+				<u-button shape="circle" type="error" :plain="true" text="解绑模板" :customStyle="btnUnbindStyle" size="normal" @click="unbindTemplate" v-if="isTemplateActuallyBound"></u-button>
+				<u-button shape="circle" type="primary" :plain="true" text="保存" :customStyle="btnSaveStyle" size="normal" @click="saveSecond"></u-button>
 			</view>
 		</u-popup>
 		
@@ -97,8 +98,11 @@
 					'bottom': '0rpx',
 					'transition': 'bottom 0.3s'
 				},
-				btnStyle: {
-					'width': '200rpx',
+				btnSaveStyle: {
+					'width': '100rpx',
+				},
+				btnUnbindStyle: {
+					'width': 'auto',
 				},
 				// 弹出框的模板数据
 				popTemplate: null,
@@ -122,6 +126,15 @@
 				templateList: [],
 				secondType: undefined
 			};
+		},
+		computed: {
+			// 新增计算属性，判断当前编辑的秒记是否实际绑定了模板
+			isTemplateActuallyBound() {
+				if (this.secondType && this[this.secondType] && this[this.secondType].tempId && this[this.secondType].tempId !== '' && this[this.secondType].tempId !== this[this.secondType]._id) {
+					return true;
+				}
+				return false;
+			}
 		},
 		async onLoad() {
 			// 这里先获取模板数据为的是在获取秒记后通过模板id找到对应模板进行渲染
@@ -160,36 +173,58 @@
 			},
 			renderTwoSecondTemplates() {
 				if (this.secondOneData.tempId) {
+					// 如果tempId是秒记本身的_id，则视为未绑定
+					if (this.secondOneData.tempId === this.secondOneData._id) {
+						this.secondOneTemp = null;
+					} else {
 					const index = this.templateList.findIndex(item => item._id === this.secondOneData.tempId)
 					if (index !== -1) {
 						this.secondOneTemp = formatOneTemplate(this.templateList[index])
+						} else {
+							this.secondOneTemp = null; // 找不到也视为未绑定
+						}
 					}
+				} else {
+					this.secondOneTemp = null; // tempId为空也视为未绑定
 				}
+
 				if (this.secondTwoData.tempId) {
+					// 如果tempId是秒记本身的_id，则视为未绑定
+					if (this.secondTwoData.tempId === this.secondTwoData._id) {
+						this.secondTwoTemp = null;
+					} else {
 					const index = this.templateList.findIndex(item => item._id === this.secondTwoData.tempId)
 					if (index !== -1) {
 						this.secondTwoTemp = formatOneTemplate(this.templateList[index])
-						console.log('this.secondTwoTemp: ',this.secondTwoTemp);
+							// console.log('this.secondTwoTemp: ',this.secondTwoTemp);
+						} else {
+							this.secondTwoTemp = null; // 找不到也视为未绑定
+						}
 					}
+				} else {
+					this.secondTwoTemp = null; // tempId为空也视为未绑定
 				}
 			},
 			// 修改按钮触发
 			editSeconds(type) {
 				// 1 重置pop框数据
 				this.secondName = ''
-				this.popTemplate = null
+				// this.popTemplate = null; // 由后续逻辑决定
+
 				// 2 传入秒记数据到pop框中
 				if (type === 1) {
 					this.secondType = 'secondOneData'
 					this.secondName = this.secondOneData.subTitle
-					this.popTemplate = this.secondOneTemp
+					// 如果secondOneTemp为null (表示未绑定或找不到模板)，则popTemplate也应为null
+					this.popTemplate = this.secondOneTemp;
 				} else if (type === 2) {
 					this.secondType = 'secondTwoData'
 					this.secondName = this.secondTwoData.subTitle
-					this.popTemplate = this.secondTwoTemp
+					// 如果secondTwoTemp为null，则popTemplate也应为null
+					this.popTemplate = this.secondTwoTemp;
 				}
 				// 3 展示pop
-				console.log('编辑秒记模板，type:',type)
+				// console.log('编辑秒记模板，type:',type, 'popTemplate:', this.popTemplate)
 				this.showPop = true
 			},
 			// pop框保存按钮触发
@@ -207,33 +242,44 @@
 					mask: true
 				})
 				this.showPop = false
-				// 1 判断新建or修改
+				// 1 判断新建or修改 // 实际上是判断记录是否存在，然后执行更新或添加
 				// 2 上传or更新数据
-				if (this[this.secondType].tempId) {
-					// 存在tempId，则为修改
-					const data = {
-						template_id: this.popTemplate._id,
-						second_name: this.secondName,
-					}
-					await db.collection("mj-user-seconds").doc(this[this.secondType]._id).update(data)
+
+				const trimmedSecondName = this.secondName ? this.secondName.trim() : '';
+				const defaultName = this[this.secondType].secondType === 1 ? '秒记1' : '秒记2';
+				const finalSecondName = trimmedSecondName === '' ? defaultName : trimmedSecondName;
+
+				const dataForDb = {
+					template_id: this.popTemplate._id, // 模板ID必须存在，已在前面校验过
+					second_name: finalSecondName,
+				};
+
+				try {
+					if (this[this.secondType]._id) {
+						// 记录已存在，执行更新
+						await db.collection("mj-user-seconds").doc(this[this.secondType]._id).update(dataForDb);
 				} else {
-					// 新增
-					const data = {
-						template_id: this.popTemplate._id,
-						second_type: this[this.secondType].secondType,
-						second_name: this.secondName,
-					}
-					await db.collection("mj-user-seconds").add(data)
+						// 记录不存在，执行添加
+						dataForDb.second_type = this[this.secondType].secondType; // 新增时需要秒记类型
+						await db.collection("mj-user-seconds").add(dataForDb);
 				}
-				// 3 隐藏loading
+
 				uni.hideLoading()
 				uni.showToast({
 					icon: 'success',
 					title: '保存成功'
 				})
-				// 4 重新获取秒记数据
-				this.getUserSeconds()
-				console.log('保存',this.secondName, this.popTemplate);
+					// 重新获取秒记数据，以更新本地状态和UI
+					await this.getUserSeconds()
+					// console.log('保存后的秒记名:', finalSecondName, '模板信息:', this.popTemplate);
+				} catch (error) {
+					uni.hideLoading();
+					uni.showToast({
+						icon: 'none',
+						title: '保存失败，请重试'
+					});
+					console.error("saveSecond error:", error);
+				}
 			},
 			showTempSelect() {
 				this.popStyle['bottom'] = `${this.windowHeight * 0.1}px`
@@ -263,6 +309,62 @@
 				this.popStyle['bottom'] = '0rpx'
 				this.showTemplate = false
 			},
+			// 新增：解绑模板
+			async unbindTemplate() {
+				if (!this.popTemplate) {
+					uni.showToast({
+						icon: 'none',
+						title: '当前没有绑定模板'
+					});
+					return;
+				}
+				const modalRes = await uni.showModal({
+					title: '提示',
+					content: '确定要解绑当前模板吗？解绑后秒记别名也会被清空。',
+					confirmColor: '#f56c6c' // 确认按钮颜色设为红色，以示警告
+				});
+
+				if (modalRes.confirm) {
+					uni.showLoading({
+						mask: true,
+						title: '正在解绑...'
+					});
+					this.showPop = false;
+					try {
+						const data = {
+							template_id: this[this.secondType]._id, // 用户指定的解绑数据库逻辑
+							second_name: '',   // 清空别名
+						};
+						await db.collection("mj-user-seconds").doc(this[this.secondType]._id).update(data);
+						
+						// 更新本地数据
+						this[this.secondType].tempId = this[this.secondType]._id; // 保持与数据库一致
+						this[this.secondType].subTitle = '';
+						if (this.secondType === 'secondOneData') {
+							this.secondOneTemp = null; // 解绑后，卡片模板视图也清空
+						} else if (this.secondType === 'secondTwoData') {
+							this.secondTwoTemp = null; // 解绑后，卡片模板视图也清空
+						}
+						this.popTemplate = null; // 清空弹窗中的模板显示
+						this.secondName = '';    // 清空弹窗中的别名显示
+
+						uni.hideLoading();
+						uni.showToast({
+							icon: 'success',
+							title: '解绑成功'
+						});
+						// 重新获取秒记数据以刷新列表（如果需要，或者直接操作本地数据）
+						// this.getUserSeconds(); // 已经在上面更新了本地数据，可以按需决定是否重新请求
+					} catch (error) {
+						uni.hideLoading();
+						uni.showToast({
+							icon: 'none',
+							title: '解绑失败，请重试'
+						});
+						console.error("unbindTemplate error:", error);
+					}
+				}
+			}
 		}
 	}
 </script>
@@ -340,6 +442,11 @@
 		.template-list {
 			overflow: auto;
 		}
+	}
+	.pop-buttons {
+		display: flex;
+		justify-content: center;
+		margin-top: 20rpx;
 	}
 }
 </style>

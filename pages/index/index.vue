@@ -81,7 +81,7 @@
 				</view>
 			</view>
 		</view>
-		<view class="asset" v-if="isIndexShow">
+		<view class="asset" v-if="isIndexShow && userAssets.length > 0">
 			<view class="header">
 				<view class="left">
 					<uni-icons type="wallet" size="48rpx" color="#212121"></uni-icons>
@@ -151,13 +151,29 @@
 			
 			const {uid} = uniCloud.getCurrentUserInfo()
 			if (uid) {
-				// 获取用户资产列表 (这个方法已存在，并由 updateAssetsList 事件更新)
-				this.getUserAssets() 
-				// 获取首页顶部轮播所需的本月支出和本月收入 (这个方法已存在)
-				this.getUserMonthlyBillBalance()
+				// 显示加载提示
+				uni.showLoading({
+					title: '数据加载中...',
+					mask: true
+				})
 				
-				// *** 新增：获取月度账单列表 (原bills.vue的逻辑) ***
-				await this.getMonthBillsToDisplay() // 调用新的方法获取并处理账单数据
+				try {
+					// 获取用户资产列表 (这个方法已存在，并由 updateAssetsList 事件更新)
+					await this.getUserAssets() 
+					// 获取首页顶部轮播所需的本月支出和本月收入 (这个方法已存在)
+					await this.getUserMonthlyBillBalance()
+					
+					// *** 新增：获取月度账单列表 (原bills.vue的逻辑) ***
+					await this.getMonthBillsToDisplay() // 调用新的方法获取并处理账单数据
+				} catch (error) {
+					console.error('首页数据加载失败:', error)
+					uni.showToast({
+						title: '数据加载失败',
+						icon: 'error'
+					})
+				} finally {
+					uni.hideLoading()
+				}
 
 				// 绑定全局事件
 				uni.$on('updateAssetsList',this.getUserAssets) // 已存在
@@ -180,15 +196,33 @@
 			}
 
 			if (uid) {
-				if(this.isIndexShow) { // 如果当前是资产页面，重新获取资产数据
-					this.getUserAssets()
-				} else {
-					// 如果是账单显示页，且非首次加载(onReady已处理)，则更新账单
-					// 这里的逻辑需要确认，原bills.vue的onShow是直接调用this.getUserBills()
-					// 考虑到首页可能频繁显示，是否每次onShow都刷新月账单，或仅在特定条件下刷新
-					 if (!this.initBillCard) { // 避免与onReady重复加载
-						await this.getMonthBillsToDisplay();
-					 }
+				// 避免与onReady重复加载
+				if (!this.initBillCard) { 
+					// 显示加载提示
+					uni.showLoading({
+						title: '刷新数据中...',
+						mask: true
+					})
+					
+					try {
+						if(this.isIndexShow) { // 如果当前是资产页面，重新获取资产数据
+							await this.getUserAssets()
+						} else {
+							// 如果是账单显示页，刷新账单和相关数据
+							await Promise.all([
+								this.getMonthBillsToDisplay(),
+								this.getUserMonthlyBillBalance()
+							])
+						}
+					} catch (error) {
+						console.error('首页数据刷新失败:', error)
+						uni.showToast({
+							title: '数据刷新失败',
+							icon: 'error'
+						})
+					} finally {
+						uni.hideLoading()
+					}
 				}
 			}
 		},
@@ -202,7 +236,7 @@
 					url:"/pagesMy/my-assets/my-assets"
 				})
 			},
-			swiperChange(res) {
+			async swiperChange(res) {
 				const prevIndex = this.isIndexShow
 				this.isIndexShow = res.detail.current
 				this.isIndexShow ? this.bottomBtnText = '添加资产' : this.bottomBtnText = '点我记账'
@@ -210,13 +244,43 @@
 				if(this.isIndexShow === 1 && prevIndex === 0) { // 切换到资产页面
 					const {uid} = uniCloud.getCurrentUserInfo()
 					if(uid) {
-						this.getUserAssets()
+						// 显示加载提示
+						uni.showLoading({
+							title: '加载资产数据...',
+							mask: true
+						})
+						try {
+							await this.getUserAssets()
+						} catch (error) {
+							console.error('资产数据加载失败:', error)
+							uni.showToast({
+								title: '资产数据加载失败',
+								icon: 'error'
+							})
+						} finally {
+							uni.hideLoading()
+						}
 					}
 				} else if (this.isIndexShow === 0 && prevIndex === 1) { // 切换回账单展示
 					const {uid} = uniCloud.getCurrentUserInfo()
 					if(uid) {
-						// 确保月账单数据是最新的
-						this.getMonthBillsToDisplay();
+						// 显示加载提示
+						uni.showLoading({
+							title: '加载账单数据...',
+							mask: true
+						})
+						try {
+							// 确保月账单数据是最新的
+							await this.getMonthBillsToDisplay();
+						} catch (error) {
+							console.error('账单数据加载失败:', error)
+							uni.showToast({
+								title: '账单数据加载失败',
+								icon: 'error'
+							})
+						} finally {
+							uni.hideLoading()
+						}
 					}
 				}
 			},
@@ -241,18 +305,33 @@
 			async getUserMonthlyBillBalance() {
 				const {uid} = uniCloud.getCurrentUserInfo();
 				if (!uid) return;
-				// 筛选条件 bill_date 日期格式化成 YYYY-MM 的字段，按照账单类型进行分组，并计算每个分组的总价
-				// 注意：这里用的是 this.month (来自日期选择器) 还是固定用当前月份 (this.currentDate)？
-				// 首页顶部swiper应该始终显示当前月份的统计，而不是跟随日期选择器变化。
-				// 因此，我们应该用一个始终代表当前月份的变量。
-				const currentDisplayMonth = uni.$u.timeFormat(Date.now(), 'yyyy-mm');
+				
+				try {
+					// 筛选条件 bill_date 日期格式化成 YYYY-MM 的字段，按照账单类型进行分组，并计算每个分组的总价
+					// 注意：这里用的是 this.month (来自日期选择器) 还是固定用当前月份 (this.currentDate)？
+					// 首页顶部swiper应该始终显示当前月份的统计，而不是跟随日期选择器变化。
+					// 因此，我们应该用一个始终代表当前月份的变量。
+					const currentDisplayMonth = uni.$u.timeFormat(Date.now(), 'yyyy-mm');
 
-				const res = await db.collection("mj-user-bills").where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentDisplayMonth}"`).groupBy('bill_type').groupField('sum(bill_amount) as bill_amount_total').orderBy('bill_type asc').get()
-				const monthlyExpenseTemp = res.result.data.filter(item => item.bill_type === 0)[0]?.bill_amount_total / 100 || 0 // 确保是数字
-				const transferBalanceTemp = res.result.data.filter(item => item.bill_type === 2)[0]?.bill_amount_total / 100 || 0 // 确保是数字
-				const monthlyIncomeTemp = res.result.data.filter(item => item.bill_type === 1)[0]?.bill_amount_total / 100 || 0 // 确保是数字
-				this.monthlyExpense = Number(monthlyExpenseTemp) + Number(transferBalanceTemp)
-				this.monthlyIncome = Number(monthlyIncomeTemp)
+					const res = await db.collection("mj-user-bills").where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentDisplayMonth}"`).groupBy('bill_type').groupField('sum(bill_amount) as bill_amount_total').orderBy('bill_type asc').get()
+					const monthlyExpenseTemp = res.result.data.filter(item => item.bill_type === 0)[0]?.bill_amount_total / 100 || 0 // 确保是数字
+					const transferBalanceTemp = res.result.data.filter(item => item.bill_type === 2)[0]?.bill_amount_total / 100 || 0 // 确保是数字
+					const monthlyIncomeTemp = res.result.data.filter(item => item.bill_type === 1)[0]?.bill_amount_total / 100 || 0 // 确保是数字
+					this.monthlyExpense = Number(monthlyExpenseTemp) + Number(transferBalanceTemp)
+					this.monthlyIncome = Number(monthlyIncomeTemp)
+					
+					// 同时更新 monthlyBalance 对象，用于首页轮播显示
+					this.monthlyBalance.monthlyExpend = this.monthlyExpense
+					this.monthlyBalance.monthlyIncome = this.monthlyIncome
+				} catch (error) {
+					console.error('获取月度账单余额失败:', error);
+					// 设置默认值，避免界面显示异常
+					this.monthlyExpense = 0;
+					this.monthlyIncome = 0;
+					this.monthlyBalance.monthlyExpend = 0;
+					this.monthlyBalance.monthlyIncome = 0;
+					throw error; // 重新抛出错误，让调用者处理
+				}
 			},
 			// 获取用户资产列表 - 此方法保留
 			async getUserAssets(params = false) {
@@ -310,10 +389,27 @@
 
 			// ---- 从 bills.vue 迁移过来的方法 ----
 			// 触发日期选择器
-			pickDate(res) {
+			async pickDate(res) {
 				const {value} = res
 				this.month = uni.$u.timeFormat(value, 'yyyy-mm')
-				this.getMonthBillsToDisplay() // 更新账单列表
+				
+				// 显示加载提示
+				uni.showLoading({
+					title: '加载账单数据...',
+					mask: true
+				})
+				
+				try {
+					await this.getMonthBillsToDisplay() // 更新账单列表
+				} catch (error) {
+					console.error('切换月份账单数据加载失败:', error)
+					uni.showToast({
+						title: '账单数据加载失败',
+						icon: 'error'
+					})
+				} finally {
+					uni.hideLoading()
+				}
 			},
 
 			// 获取并处理月度账单数据 (原 getMonthBills)
@@ -327,80 +423,101 @@
 					this.userBillsByDay = [] // 重置显示的账单列表
 				}
 				
-				// 按月份获取账单，记账日期降序排列
-				const userMonthBillsQuery = db.collection("mj-user-bills")
-					.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${this.month}"`)
-					.orderBy('bill_date desc')
-					.getTemp();
-				// 联表查询用户资产，用于在账单卡片中显示账户名
-				const userAssetsQuery = db.collection("mj-user-assets")
-					.where('user_id == $cloudEnv_uid')
-					.field('_id,asset_type,user_id,asset_name')
-					.getTemp();
-				
-				const res = await db.collection(userMonthBillsQuery, userAssetsQuery).get();
-				
-				let rawUserBills = res.result.data;
-				// 统一修改金额为 元
-				rawUserBills.forEach(bill => bill.bill_amount /= 100);
+				try {
+					// 按月份获取账单，记账日期降序排列
+					const userMonthBillsQuery = db.collection("mj-user-bills")
+						.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${this.month}"`)
+						.orderBy('bill_date desc')
+						.getTemp();
+					// 联表查询用户资产，用于在账单卡片中显示账户名
+					const userAssetsQuery = db.collection("mj-user-assets")
+						.where('user_id == $cloudEnv_uid')
+						.field('_id,asset_type,user_id,asset_name')
+						.getTemp();
+					
+					const res = await db.collection(userMonthBillsQuery, userAssetsQuery).get();
+					
+					let rawUserBills = res.result.data;
+					// 统一修改金额为 元
+					rawUserBills.forEach(bill => bill.bill_amount /= 100);
 
-				// 计算当前选择月份的支出和收入 (用于账单列表下方的总览)
-				const categorizedBillsByBillType = { 0: 0, 1: 0, 2: 0 };
-				for (const bill of rawUserBills) {
-				  const { bill_type, bill_amount } = bill;
-				  categorizedBillsByBillType[bill_type] += bill_amount;
-				}
-				this.monthlyBalance.monthlyExpend = categorizedBillsByBillType[0] + categorizedBillsByBillType[2];
-				this.monthlyBalance.monthlyIncome = categorizedBillsByBillType[1];
-
-				// --- 按天对账单进行分类 ---
-				let numberOfDaysInSelectedMonth;
-				// 判断是当月还是历史月份，以确定日期分组的范围
-				if(this.month === this.monthNow) { // 如果是当前月份
-					const today = new Date();
-					numberOfDaysInSelectedMonth = today.getDate(); // 获取今天是本月的第几天
-				} else { // 如果是历史月份
-					numberOfDaysInSelectedMonth = this.getTotalDaysInMonth(this.month); // 获取该月的总天数
-				}
-
-				const twoDimensionalArray = [];
-				for (let i = 0; i < numberOfDaysInSelectedMonth; i++) {
-					twoDimensionalArray.push([]);
-				}
-				
-				rawUserBills.forEach(bill => {
-					let billDay = parseInt(uni.$u.timeFormat(bill.bill_date, 'dd'), 10); // 获取账单是几号
-					// 数组索引计算：数组是按日期倒序的，所以最近的日期（如当月30号）应该在数组前面。
-					// 例如，如果 numberOfDaysInSelectedMonth 是30，30号的账单放在索引0，29号的账单放在索引1，以此类推。
-					// 索引 = (总天数 - 账单日期日)
-					// 注意：如果月份是当前月，numberOfDaysInSelectedMonth 是今天的日期，不是整月天数。
-					// 例如，当前是9月10日，则 numberOfDaysInSelectedMonth=10。
-					// 9月10日的账单，billDay=10, index = 10-10=0.
-					// 9月9日的账单，billDay=9, index = 10-9=1.
-					// 9月1日的账单，billDay=1, index = 10-1=9.
-					// 这个逻辑和 bills.vue 保持一致。
-					const index = numberOfDaysInSelectedMonth - billDay;
-					if (index >= 0 && index < numberOfDaysInSelectedMonth) { // 确保索引在有效范围内
-						twoDimensionalArray[index].push(bill);
-					} else {
-						// console.warn("账单日期索引计算错误", bill, "billDay:", billDay, "numberOfDays:", numberOfDaysInSelectedMonth, "index:", index);
+					// 计算当前选择月份的支出和收入 (用于账单列表下方的总览)
+					const categorizedBillsByBillType = { 0: 0, 1: 0, 2: 0 };
+					for (const bill of rawUserBills) {
+					  const { bill_type, bill_amount } = bill;
+					  categorizedBillsByBillType[bill_type] += bill_amount;
 					}
-				});
-				
-				this.userBillsOrderByDayArray = twoDimensionalArray; // 存储原始按天分组数据，用于触底加载
+					this.monthlyBalance.monthlyExpend = categorizedBillsByBillType[0] + categorizedBillsByBillType[2];
+					this.monthlyBalance.monthlyIncome = categorizedBillsByBillType[1];
 
-				// 初始加载时，决定显示多少天的账单 (至少6条，或全部)
-				this.needShowIndex = this.findNeedShowIndex(twoDimensionalArray) ?? numberOfDaysInSelectedMonth;
-				this.userBillsByDay = twoDimensionalArray.slice(0, this.needShowIndex + 1);
-				
-				console.log('账单列表数据处理完毕，userBillsByDay:', this.userBillsByDay);
+					// --- 按天对账单进行分类 ---
+					let numberOfDaysInSelectedMonth;
+					// 判断是当月还是历史月份，以确定日期分组的范围
+					if(this.month === this.monthNow) { // 如果是当前月份
+						const today = new Date();
+						numberOfDaysInSelectedMonth = today.getDate(); // 获取今天是本月的第几天
+					} else { // 如果是历史月份
+						numberOfDaysInSelectedMonth = this.getTotalDaysInMonth(this.month); // 获取该月的总天数
+					}
+
+					const twoDimensionalArray = [];
+					for (let i = 0; i < numberOfDaysInSelectedMonth; i++) {
+						twoDimensionalArray.push([]);
+					}
+					
+					rawUserBills.forEach(bill => {
+						let billDay = parseInt(uni.$u.timeFormat(bill.bill_date, 'dd'), 10); // 获取账单是几号
+						// 数组索引计算：数组是按日期倒序的，所以最近的日期（如当月30号）应该在数组前面。
+						// 例如，如果 numberOfDaysInSelectedMonth 是30，30号的账单放在索引0，29号的账单放在索引1，以此类推。
+						// 索引 = (总天数 - 账单日期日)
+						// 注意：如果月份是当前月，numberOfDaysInSelectedMonth 是今天的日期，不是整月天数。
+						// 例如，当前是9月10日，则 numberOfDaysInSelectedMonth=10。
+						// 9月10日的账单，billDay=10, index = 10-10=0.
+						// 9月9日的账单，billDay=9, index = 10-9=1.
+						// 9月1日的账单，billDay=1, index = 10-1=9.
+						// 这个逻辑和 bills.vue 保持一致。
+						const index = numberOfDaysInSelectedMonth - billDay;
+						if (index >= 0 && index < numberOfDaysInSelectedMonth) { // 确保索引在有效范围内
+							twoDimensionalArray[index].push(bill);
+						} else {
+							// console.warn("账单日期索引计算错误", bill, "billDay:", billDay, "numberOfDays:", numberOfDaysInSelectedMonth, "index:", index);
+						}
+					});
+					
+					this.userBillsOrderByDayArray = twoDimensionalArray; // 存储原始按天分组数据，用于触底加载
+
+					// 初始加载时，决定显示多少天的账单 (至少6条，或全部)
+					this.needShowIndex = this.findNeedShowIndex(twoDimensionalArray) ?? numberOfDaysInSelectedMonth;
+					this.userBillsByDay = twoDimensionalArray.slice(0, this.needShowIndex + 1);
+					
+					console.log('账单列表数据处理完毕，userBillsByDay:', this.userBillsByDay);
+				} catch (error) {
+					console.error('获取月度账单数据失败:', error);
+					throw error; // 重新抛出错误，让调用者处理
+				}
 			},
 
 			// 当账单数据更新时（例如，记一笔后，或删除账单后）调用此方法
-			upDateMonthBillsToDisplay() {
-				this.getMonthBillsToDisplay(this.month);
-				this.getUserAssets(); // 确保资产信息也是最新的，因为账单卡片可能需要
-				this.getUserMonthlyBillBalance(); // 更新首页顶部的月度收支统计
+			async upDateMonthBillsToDisplay() {
+				// 显示加载提示
+				uni.showLoading({
+					title: '更新数据中...',
+					mask: true
+				})
+				
+				try {
+					await this.getMonthBillsToDisplay(this.month);
+					await this.getUserAssets(); // 确保资产信息也是最新的，因为账单卡片可能需要
+					await this.getUserMonthlyBillBalance(); // 更新首页顶部的月度收支统计
+				} catch (error) {
+					console.error('更新账单数据失败:', error)
+					uni.showToast({
+						title: '更新数据失败',
+						icon: 'error'
+					})
+				} finally {
+					uni.hideLoading()
+				}
 			},
 
 			// 获取指定年月的总天数
@@ -475,7 +592,7 @@
 		// 分享功能
 		onShareAppMessage () {
 			return {
-				title: "妙记——记录你的生活",
+				title: "致富之路——口袋智富",
 				path: "/pages/index/index",
 				imageUrl: "/static/share.png"
 			}
@@ -483,7 +600,7 @@
 		// 分享到朋友圈功能
 		onShareTimeline(){
 			return {
-				title: '妙记——记录你的生活'
+				title: '致富之路——口袋智富'
 			}
 		}
 	}

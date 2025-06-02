@@ -5,7 +5,7 @@
 			<!-- 顶部logo+文字 -->
 			<view class="logo">
 				<u--image src="/static/logo.png" width="72px" height="72px" radius="20px" ></u--image>
-				<text class="title">妙记✨记录你的生活</text>
+				<text class="title">致富之路✨口袋智富</text>
 			</view>
 			<!-- 快捷登录框 当url带参数时有效 -->
 			<template v-if="['apple','weixin', 'weixinMobile'].includes(type)">
@@ -39,7 +39,7 @@
 					个人信息保护提示
 				</view>
 				<view class="content">
-					我们会按照相关法律法规的规定及<text class="highlight" @click="openPrivacyContract">《妙记账单小程序隐私保护指引》</text>，遵守正当、合法、必要原则收集和使用你的个人信息。
+					我们会按照相关法律法规的规定及<text class="highlight" @click="openPrivacyContract">《口袋智富隐私保护指引》</text>，遵守正当、合法、必要原则收集和使用你的个人信息。
 				</view>
 				<view class="content">
 					为了向你提供正常的服务，我们可能会申请你的头像、昵称、位置信息等权限，相应权限并不会默认开启或强制收集信息。权限开启后，你可以随时通过设置选项关闭权限。你不同意开启权限，将不会影响其他非相关业务功能的正常使用。

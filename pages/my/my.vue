@@ -57,7 +57,7 @@
 				<u-cell :isLink="true" @click="clickAbout">
 					<view slot="title" class="about">
 						<view>
-							关于妙记
+							关于口袋智富
 						</view>
 						<view class="about-tag">
 							<u-tag text="🎉v1.0.0" size="mini" @click="clickAbout"></u-tag>
@@ -68,7 +68,7 @@
 				<u-cell title="反馈问题" :isLink="true" @click="clickFeedback">
 					<uni-icons slot="icon" type="compose" size="36rpx"></uni-icons>
 				</u-cell>
-				<u-cell title="联系作者" :isLink="true" @click="clickAuthor">
+				<u-cell title="项目成员" :isLink="true" @click="clickAuthor">
 					<uni-icons slot="icon" type="personadd" size="36rpx"></uni-icons>
 				</u-cell>
 				<u-cell title="退出登录" :isLink="true" @click="logout">
@@ -114,11 +114,6 @@
 					{
 						icon: 'mj-reloadtime',
 						title: '定时记账',
-						customPrefix: "miaoji"
-					},
-					{
-						icon: 'mj-yuan-circle',
-						title: '预算设置',
 						customPrefix: "miaoji"
 					}
 				],
@@ -205,7 +200,8 @@
 			},
 			clickAuthor() {
 				uni.showModal({
-					content: "微信：kuaikuaitz",
+					title: "中山大学计算机学院 22级软件工程大作业 口袋智富记账应用",
+					content: "前端开发工程师：苏逸翔\n后端开发工程师：王晨宇\n项目经理/技术负责人：邵力\nUI设计师：罗松健\n测试工程师：莫桐语\n产品经理/文档工程师：汪宣彤",
 					cancelColor: "rgba(0,0,0,0.6)",
 					confirmColor:"#9fcba7",
 					showCancel:false
@@ -217,16 +213,28 @@
 				})
 			},
 			logout() {
-				mutations.logout()
-				// 5.24 退出时清除用户信息缓存
-				uni.removeStorageSync('mj-user-info'); // 清除自定义的用户信息缓存
-				// 可选：立即重置本地userInfo，以便UI即时（部分）更新
-				this.userInfo = {
-				    avatarSrc: '',
-				    nickname: '',
-				    registerDate: 0,
-				    useDate: 0,
-				};
+				uni.showModal({
+					title: '确认退出',
+					content: '确定要退出登录吗？',
+					cancelColor: "rgba(0,0,0,0.6)",
+					confirmColor: "#9fcba7",
+					success: (res) => {
+						if (res.confirm) {
+							// 用户点击确认，执行退出登录
+							mutations.logout()
+							// 5.24 退出时清除用户信息缓存
+							uni.removeStorageSync('mj-user-info'); // 清除自定义的用户信息缓存
+							// 可选：立即重置本地userInfo，以便UI即时（部分）更新
+							this.userInfo = {
+								avatarSrc: '',
+								nickname: '',
+								registerDate: 0,
+								useDate: 0,
+							};
+						}
+						// 如果用户点击取消（res.cancel为true），则不执行任何操作
+					}
+				})
 			},
 			// 注销
 			deactivate() {
@@ -277,7 +285,7 @@
 				Object.assign(this.userInfo, storageUserInfo)
 				this.getUserDate()
 			},
-			// 获取使用妙记天数
+			// 获取使用天数
 			getUserDate() {
 				const registerDateTimestamp = Date.parse(this.userInfo.registerDate)
 				let useDate = Date.now() - registerDateTimestamp
@@ -287,7 +295,7 @@
 		// 分享功能
 		onShareAppMessage () {
 			return {
-				title: "妙记——记录你的生活",
+				title: "致富之路——口袋智富",
 				path: "/pages/index/index",
 				imageUrl: "/static/share.png"
 			}
@@ -295,7 +303,7 @@
 		// 分享到朋友圈功能
 		onShareTimeline(){
 			return {
-				title: '妙记——记录你的生活'
+				title: '致富之路——口袋智富'
 			}
 		}
 	}

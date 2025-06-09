@@ -306,7 +306,8 @@
 				throttleAddSecond: throttle(this.addSecond, 5000),
 				secondId: '',
 				navigatedFromAddAgain: false, // 新增：标记是否从"再记"跳转而来
-				isNavigatingToHome: false // 新增：防止重复跳转的状态锁
+				isNavigatingToHome: false, // 新增：防止重复跳转的状态锁
+				amount: 0 // 新增：金额输入框
 			};
 		},
 		computed: {
@@ -346,6 +347,16 @@
 			}
 			// 异步执行初始化，以便catch错误并隐藏loading
 			this.initializePageData(options);
+			if (options.amount) {
+				this.amount = options.amount; // 假设你的金额输入框绑定了 this.amount
+				this.keyboardInfo.balance = options.amount; // 如果你用 keyboardInfo.balance 作为金额输入
+			}
+			// 如果有传入 tab 参数，切换到对应的 tab
+			if (options.tab !== undefined) {
+				this.$nextTick(() => {
+					this.$refs.tabs.clickHandler({}, parseInt(options.tab));
+				});
+			}
 		},
 		onShow() {
 			// 获取用户秒记列表和模板列表

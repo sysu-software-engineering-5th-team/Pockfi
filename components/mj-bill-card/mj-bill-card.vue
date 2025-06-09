@@ -117,7 +117,7 @@
 								})
 								await db.collection("mj-user-bills").doc(bill._id).remove()
 								// console.log('删除账单成功');
-								uni.$emit('updateBillsList')
+								// uni.$emit('updateBillsList') // 已经没有这个事件了
 								uni.$emit('updateMonthlyBillBalance')
 								await this.updateAssetBalance(bill)
 								// console.log('更新资产成功');
@@ -125,6 +125,8 @@
 								await this.asyncEmitUpdateAssets()
 								// 更新账单页面
 								uni.$emit('updateBillPage')
+								// 通知提醒页面更新存钱目标
+								uni.$emit('savingGoalsMightUpdate'); 
 								uni.hideLoading()
 								uni.showToast({
 									title: "删除成功",

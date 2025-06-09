@@ -469,14 +469,14 @@
 		},
 		onShareAppMessage () {
 			return {
-				title: "妙记——记录你的生活",
+				title: "致富之路——口袋智富",
 				path: "/pages/index/index",
 				imageUrl: "/static/share.png"
 			}
 		},
 		onShareTimeline(){
 			return {
-				title: '妙记——记录你的生活'
+				title: '致富之路——口袋智富'
 			}
 		}
 	}

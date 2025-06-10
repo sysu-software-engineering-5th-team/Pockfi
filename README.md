@@ -168,6 +168,16 @@ uni.scss                // 全局的样式文件
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-06-02</div></div>
 
+  - 标准测试：
+
+    - [x] 切换月度预算、存钱目标：正确进行切换显示
+
+    - [x] 显示当前预算进度：正确显示，正确显示进度、金额等
+
+    - [x] 显示存钱目标列表：正确显示，正确显示进度、金额、进行中或已完成标签等
+
+      
+
 - [X] 我的
 
   <div>
@@ -236,8 +246,8 @@ uni.scss                // 全局的样式文件
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
           时间: 2025-05-30</div></div>
 
-    - [ ] 记账——点我记账——秒记1、秒记2：客户端提示“未找到绑定的模板”，没有检测到已经创建的模板
-    
+    - [x] 记账——点我记账——秒记1、秒记2：客户端提示“未找到绑定的模板”，没有检测到已经创建的模板
+
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-28</div></div>
       
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已分配
@@ -438,6 +448,23 @@ uni.scss                // 全局的样式文件
 - [x] 财务目标设定
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-06-02</div></div>
+  
+  - 标准测试：
+  
+    - [x] 添加存钱目标：正确添加，客户端正确显示目标列表
+    - [x] 编辑存钱目标：正确编辑，客户端正确显示目标列表
+    - [x] 删除存钱目标：正确删除，客户端正确显示目标列表
+    - [x] 添加存钱目标+收入：正确计入目标，客户端正确显示金额和进度；如果达成目标客户端正确弹窗
+  
+  - 边界测试：
+  
+    - [x] 编辑存钱目标——0、负数金额：客户端正确提示预算数字无效
+  
+    - [x] 编辑存钱目标——超长金额：客户端正确提示预算数字无效
+  
+    - [x] 修改开始日期、目标日期：正确显示合理月份日期，比如当前最多为6月；开始日期小于等于目标日期
+  
+      
 
 #### 6. 我的
 
@@ -491,7 +518,7 @@ uni.scss                // 全局的样式文件
   
     - [ ] 关于：标题是关于妙计，可以考虑改成我们项目名字，其中内容也可以考虑修改
   
-      已修改为口袋智富相关内容
+      - 已修改为口袋智富相关内容
   
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-30</div></div>
   
@@ -501,7 +528,7 @@ uni.scss                // 全局的样式文件
     
     - [ ] 联系作者：正确显示作者微信，但这部分可以考虑删除
     
-      已修改为项目成员
+      - 已修改为项目成员
       
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-30</div></div>
       

@@ -151,8 +151,29 @@
 			
 			const {uid} = uniCloud.getCurrentUserInfo()
 			if (uid) {
-				this.loadData();
-
+				// 显示加载提示
+				uni.showLoading({
+					title: '数据加载中...',
+					mask: true
+				})
+				
+				try {
+					// 获取用户资产列表 (这个方法已存在，并由 updateAssetsList 事件更新)
+					await this.getUserAssets() 
+					// 获取首页顶部轮播所需的本月支出和本月收入 (这个方法已存在)
+					await this.getUserMonthlyBillBalance()
+					
+					// *** 新增：获取月度账单列表 (原bills.vue的逻辑) ***
+					await this.getMonthBillsToDisplay() // 调用新的方法获取并处理账单数据
+				} catch (error) {
+					console.error('首页数据加载失败:', error)
+					uni.showToast({
+						title: '数据加载失败',
+						icon: 'error'
+					})
+				} finally {
+					uni.hideLoading()
+				}
 
 				// 绑定全局事件
 				uni.$on('updateAssetsList',this.getUserAssets) // 已存在
@@ -187,7 +208,31 @@
 			if (uid) {
 				// 避免与onReady重复加载
 				if (!this.initBillCard) { 
-					await this.loadData();
+					// 显示加载提示
+					uni.showLoading({
+						title: '刷新数据中...',
+						mask: true
+					})
+					
+					try {
+						if(this.isIndexShow) { // 如果当前是资产页面，重新获取资产数据
+							await this.getUserAssets()
+						} else {
+							// 如果是账单显示页，刷新账单和相关数据
+							await Promise.all([
+								this.getMonthBillsToDisplay(),
+								this.getUserMonthlyBillBalance()
+							])
+						}
+					} catch (error) {
+						console.error('首页数据刷新失败:', error)
+						uni.showToast({
+							title: '数据刷新失败',
+							icon: 'error'
+						})
+					} finally {
+						uni.hideLoading()
+					}
 				}
 			}
 		},

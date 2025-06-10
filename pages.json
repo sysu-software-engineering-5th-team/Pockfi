@@ -2,7 +2,7 @@
 	"pages": [{
 		"path": "pages/index/index",
 		"style": {
-			"navigationBarTitleText": "妙记",
+			"navigationBarTitleText": "口袋智富",
 			"enablePullDownRefresh": false
 		}
 	}, {
@@ -15,6 +15,12 @@
 		"path": "pages/finance/finance",
 		"style": {
 			"navigationBarTitleText": "理财",
+			"enablePullDownRefresh": false
+		}
+	}, {
+		"path": "pages/reminder/reminder",
+		"style": {
+			"navigationBarTitleText": "提醒",
 			"enablePullDownRefresh": false
 		}
 	}, {
@@ -169,6 +175,12 @@
 					}
 
 				}, {
+					"path": "settings/settings",
+					"style": {
+						"navigationBarTitleText": "设置",
+						"enablePullDownRefresh": false
+					}
+				}, {
 					"path": "my-assets/my-assets",
 					"style": {
 						"navigationBarTitleText": "我的资产",
@@ -201,6 +213,13 @@
 					"path": "cron-accounting-edit/cron-accounting-edit",
 					"style": {
 						"navigationBarTitleText": "编辑任务",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "auto-accounting-guide/auto-accounting-guide",
+					"style": {
+						"navigationBarTitleText": "自动记账须知",
 						"enablePullDownRefresh": false
 					}
 				}
@@ -236,7 +255,7 @@
 	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "妙记",
+		"navigationBarTitleText": "口袋智富",
 		"navigationBarBackgroundColor": "#9fcba7",
 		"backgroundColor": "#9fcba7",
 		"backgroundTextStyle": "light"
@@ -247,30 +266,31 @@
 		"backgroundColor": "#fafafa",
 		"borderStyle": "white",
 		"list": [{
-				"pagePath": "pages/index/index",
-				"text": "主页",
-				"iconPath": "static/icons/home.png",
-				"selectedIconPath": "static/icons/home-selected.png"
-			},
-			{
-				"pagePath": "pages/charts/charts",
-				"text": "图表",
-				"iconPath": "static/icons/pie-chart.png",
-				"selectedIconPath": "static/icons/pie-chart-selected.png"
-			},
-			{
-				"pagePath": "pages/finance/finance",
-				"text": "理财",
-				"iconPath": "static/icons/finance.png",
-				"selectedIconPath": "static/icons/finance-selected.png"
-			},
-			{
-				"pagePath": "pages/my/my",
-				"text": "我的",
-				"iconPath": "static/icons/user.png",
-				"selectedIconPath": "static/icons/user-selected.png"
-			}
-		]
+			"pagePath": "pages/index/index",
+			"iconPath": "static/icons/home.png",
+			"selectedIconPath": "static/icons/home-selected.png",
+			"text": "首页"
+		}, {
+			"pagePath": "pages/charts/charts",
+			"iconPath": "static/icons/pie-chart.png",
+			"selectedIconPath": "static/icons/pie-chart-selected.png",
+			"text": "报表"
+		}, {
+			"pagePath": "pages/finance/finance",
+			"iconPath": "static/icons/finance.png",
+			"selectedIconPath": "static/icons/finance-selected.png",
+			"text": "理财"
+		}, {
+			"pagePath": "pages/reminder/reminder",
+			"iconPath": "static/icons/reminder.png",
+			"selectedIconPath": "static/icons/reminder-selected.png",
+			"text": "提醒"
+		}, {
+			"pagePath": "pages/my/my",
+			"iconPath": "static/icons/user.png",
+			"selectedIconPath": "static/icons/user-selected.png",
+			"text": "我的"
+		}]
 	},
 	"uniIdRouter": {
 		"loginPage": "uni_modules/uni-id-pages/pages/login/login-withpwd",

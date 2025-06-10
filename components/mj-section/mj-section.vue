@@ -19,7 +19,9 @@
 		props: {
 			customStyle: {
 				type: Object,
-				default: {}
+				default() {
+					return {}
+				}
 			},
 			title: {
 				type: String,

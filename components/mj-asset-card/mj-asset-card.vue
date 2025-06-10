@@ -1,7 +1,7 @@
 <template>
-	<view class="asset-card">
+	<view class="asset-card" v-if="userAssetsShow.length > 0 || userAssetsHide.length > 0">
 		<!-- 这里需要循环 -->
-		<view class="content">
+		<view class="content" v-if="userAssetsShow.length > 0">
 			<!-- 滑动单元格 -->
 			<u-swipe-action>
 				<u-swipe-action-item :options="options" v-for="asset,index in userAssetsShow" :key="asset._id" :threshold="80" @click="clickSwipeActionItemBtn($event,asset)" >
@@ -28,7 +28,9 @@
 				</u-swipe-action-item>
 			</u-swipe-action>
 		</view>
-		<view class="hideAsset" @click="clickHideAsset">查看隐藏资产</view>
+		
+		<!-- 只有当有隐藏资产或显示资产时才显示"查看隐藏资产"按钮 -->
+		<view class="hideAsset" v-if="userAssetsHide.length > 0" @click="clickHideAsset">查看隐藏资产</view>
 		
 		<!-- 隐藏资产弹出框 -->
 		<u-popup :show="showHideAsset" @close="showHideAsset = false" round="20px" :safeAreaInsetBottom="safeAreaInsetBottom" > 
@@ -66,6 +68,7 @@
 			</view>
 		</u-popup>
 	</view>
+	<!-- 当没有任何资产数据时，不渲染任何内容，避免占位 -->
 </template>
 
 <script>
@@ -94,14 +97,7 @@
 				assets: [], // 将由 watcher 初始化
 				assetsStyle: [], // 在 created 中加载
 				showHideAsset: false,
-				showBalance: true,
-				// 默认资产样式，当找不到匹配的资产类型时使用
-				defaultAssetStyle: {
-					title: '默认资产',
-					icon: 'mj-qianbao',
-					color: '#9fcba7',
-					type: 'default'
-				}
+				showBalance: true
 			};
 		},
 		computed: {
@@ -160,12 +156,16 @@
 						// 基于 prop 创建一个新的、响应式的本地 assets 列表
 						this.assets = newAssetsFromDB.map(asset => {
 							// 优先使用 asset 对象上已有的 assetStyle
-							const styleToUse = asset.assetStyle || this.assetsStyle.find(style => style.type === asset.asset_type) || this.defaultAssetStyle;
-							return {
-								...asset, // 展开原始资产属性
-								assetStyle: styleToUse // 使用已有的或新查找到的 assetStyle
-							};
-						});
+							const styleToUse = asset.assetStyle || this.assetsStyle.find(style => style.type === asset.asset_type);
+							// 只有当找到有效的 assetStyle 时才返回资产对象
+							if (styleToUse) {
+								return {
+									...asset, // 展开原始资产属性
+									assetStyle: styleToUse // 使用已有的或新查找到的 assetStyle
+								};
+							}
+							return null; // 如果没有找到有效的样式，返回 null
+						}).filter(asset => asset !== null); // 过滤掉 null 值，避免显示无效资产
 					} else {
 						this.assets = []; // 如果 prop 无效或为空，则清空本地列表
 					}

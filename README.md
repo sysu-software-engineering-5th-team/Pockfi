@@ -61,7 +61,16 @@
     > 如果中途有弹窗，云函数点击「替换」，云数据库勾选「全部创建」后点「是」。
     >
 4. 在 `manifest.json`​ 中更新你的配置。微信小程序配置，将 appid 替换成你自己小程序的 appid ；基础配置，将「uni-app 应用标识」重新获取，利用查找替换将项目中带有 `__UNI__EE89725`​ 的替换成你自己的。
-5. 点击 HBuilder 顶部「运行-运行到小程序模拟器-微信开发者工具」运行项目~
+5. 打包自定义基座：运行 -> 运行到手机或模拟器 -> 制作自定义调试基座，选择使用自有证书，内容如下：</br>
+- 证书文件：项目.keystore文件
+- 证书别名：__uni__b017c90
+- 证书库密码和私钥密码：vP00j7xp
+- 选择传统打包
+
+  请查看 “我的” - “自动记账须知”中的相关说明。  开发者注意：</br>
+- 目前uniapp控制台会报错：[JS Framework] Failed to execute the callback function:TypeError: Cannot read property 'checkServiceStatus' of undefined，这是原生插件调用信息，完全不会影响软件运行
+- uniapp打包时未添加oauth模块，调试时打开应用会有这个提示，打包使用原生插件的app会有该提示，后续改进，目前点击“忽略”即可。
+
 6. 配置小程序合法域名，请[参考文档](https://doc.dcloud.net.cn/uniCloud/publish.html#useinmp)
 
 　　　　

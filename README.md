@@ -1,5 +1,5 @@
-# README
 
+<<<<<<< Updated upstream
 　　　　口袋智富 Pockfi
 
 　　　　原始代码：
@@ -642,3 +642,5 @@ uni.scss                // 全局的样式文件
 #### 记账——点我记账——保存——收入
 
 ![42b9972fdb908ad8e7f95461e4870cb](assets/42b9972fdb908ad8e7f95461e4870cb-20250530102030-di9mp25.jpg)
+=======
+>>>>>>> Stashed changes

@@ -551,7 +551,7 @@ uni.scss                // 全局的样式文件
   
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-30</div></div>
   
-    - [x] 卡片展示——退出登录：修改完上述信息后退出登录，之前注册的账号消失，该缺陷很有可能不可复现，参考一下就好
+    - [ ] 卡片展示——退出登录：修改完上述信息后退出登录，之前注册的账号消失，该缺陷很有可能不可复现，参考一下就好
     
       - 发现是从库中将项目pull到本地后，appid也被覆盖、导致在服务器被识别为不同项目
             

@@ -30,8 +30,7 @@
 #### 初始化项目
 
 1. 右键 uniCloud 文件夹，关联你的云服务空间。
-2. 创建 uni-id 配置文件。在 `/uni_modules/uni-config-center/uniCloud/cloudfunctions/common/uni-config-center`​ 下创建 `uni-id`​
-    文件夹，然后在 `uni-id`​ 文件夹中创建 `config.json`​ ，内容为下：
+2. 创建 uni-id 配置文件。在 `/uni_modules/uni-config-center/uniCloud/cloudfunctions/common/uni-config-center`​ 下创建 `uni-id`​文件夹，然后在 `uni-id`​ 文件夹中创建 `config.json`​ ，内容为下**(记得删除所有注释内容)**：
 
 ```json
 // 配置项参考：https://doc.dcloud.net.cn/uniCloud/uni-id/summary.html#config
@@ -73,13 +72,14 @@
 
 1. 下载市面上任意手机模拟器、如mumu等，安装后启动模拟器
 2. 启动HbuilderX，打开项目
-3. HbuilderX工具栏——运行——运行到手机或模拟器——运行到Android-App基座
-4. 在页面选取模拟器设备，使用标准基座运行，等待编译运行即可
+3. HbuilderX工具栏——工具——设置——运行配置，将Android模拟器端口设置为模拟器对应的端口、如mumu为7555
+4. HbuilderX工具栏——运行——运行到手机或模拟器——运行到Android-App基座
+5. 在页面选取模拟器设备，使用标准基座运行，等待编译运行即可
 
 ##### 方法2：使用真机
 
 1. 在手机找到开发人员选项（不同手机该选项打开方式不同，比如华为要在关于手机——连续点击鸿蒙版本号框7次才能打开该选项）——勾选USB调试
-2. 将电脑USB接口连接至手机，信任设备并进入调试模式（最好使用手机原装数据线、否则可能检测不到）
+2. 将电脑USB接口连接至手机（最好使用手机原装数据线、否则可能检测不到），信任设备并进入调试模式，同时保障电脑和手机连接至同一个局域网内、如手机热点
 3. 启动HbuilderX，打开项目
 4. HbuilderX工具栏——运行——运行到手机或模拟器——运行到Android-App基座
 5. 在页面选取手机设备，使用标准基座运行，等待编译运行即可

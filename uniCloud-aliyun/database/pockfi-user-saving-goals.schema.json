@@ -1,0 +1,88 @@
+{
+	"bsonType": "object",
+	"required": ["user_id", "goal_name", "target_amount", "start_date", "end_date"],
+	"permission": {
+		"read": "doc.user_id == auth.uid",
+		"create": "'USER' in auth.role",
+		"update": "doc.user_id == auth.uid",
+		"delete": "doc.user_id == auth.uid"
+	},
+	"properties": {
+		"_id": {
+			"description": "存钱目标ID，系统自动生成"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"description": "外键，关联用户id",
+			"defaultValue": {
+				"$env": "uid"
+			},
+			"foreignKey": "uni-id-users._id"
+		},
+		"goal_name": {
+			"bsonType": "string",
+			"description": "存钱目标名称",
+			"maxLength": 50
+		},
+		"target_amount": {
+			"bsonType": "int",
+			"description": "目标金额，以分为单位"
+		},
+		"current_amount": {
+			"bsonType": "int",
+			"description": "当前已存金额，以分为单位",
+			"defaultValue": 0
+		},
+		"start_date": {
+			"bsonType": "timestamp",
+			"description": "开始日期"
+		},
+		"end_date": {
+			"bsonType": "timestamp",
+			"description": "目标完成日期"
+		},
+		"is_completed": {
+			"bsonType": "bool",
+			"description": "是否已完成",
+			"defaultValue": false
+		},
+		"is_enabled": {
+			"bsonType": "bool",
+			"description": "是否启用此目标",
+			"defaultValue": true
+		},
+		"creation_date": {
+			"bsonType": "timestamp",
+			"description": "创建时间戳",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"update_date": {
+			"bsonType": "timestamp",
+			"description": "最后更新时间戳",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"completion_date": {
+			"bsonType": "timestamp",
+			"title": "目标完成时间",
+			"description": "记录目标实际完成的时间戳。",
+			"permission": {
+			  "read": true,
+			  "write": true
+			}
+		},
+		"completion_shown_to_user": {
+			"bsonType": "bool",
+			"title": "完成提示是否已展示给用户",
+			"description": "用于标记该已完成的目标是否已经通过弹窗等方式提示过用户，防止重复提示。",
+			"defaultValue": false,
+			"permission": {
+			  "read": true,
+			  "write": true
+			}
+		  }
+	}
+} 

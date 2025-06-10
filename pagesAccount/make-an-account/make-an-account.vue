@@ -128,8 +128,8 @@
 					@change="tapKeyboard" 
 					@backspace="tapBackspace" 
 					:safeAreaInsetBottom="false" 
-					:secondOne="secondOneData ? secondOneData.second_name : '秒记1'"
-					:secondTwo="secondTwoData ? secondTwoData.second_name : '秒记2'"
+					:secondOne="keyboardSecondOneName" 
+					:secondTwo="keyboardSecondTwoName"
 				></u-keyboard>
 			</view>
 		</view>
@@ -306,7 +306,8 @@
 				throttleAddSecond: throttle(this.addSecond, 5000),
 				secondId: '',
 				navigatedFromAddAgain: false, // 新增：标记是否从"再记"跳转而来
-				isNavigatingToHome: false // 新增：防止重复跳转的状态锁
+				isNavigatingToHome: false, // 新增：防止重复跳转的状态锁
+				amount: 0 // 新增：金额输入框
 			};
 		},
 		computed: {
@@ -325,12 +326,20 @@
 				set(value) {
 					this.expendOrIncomeInfo.category_type = value
 				}
+			},
+			// 新增计算属性，确保秒记名称的响应性
+			// 使用可选链操作符?.，确保即使second_name为null，也不会导致错误
+			keyboardSecondOneName() {
+				return this.secondOneData?.second_name || '秒记1';
+			},
+			keyboardSecondTwoName() {
+				return this.secondTwoData?.second_name || '秒记2';
 			}
 		},
 		onLoad(options) { // 修改onLoad以接收完整options
 			uni.showLoading({
 				title: '加载中...',
-				mask: true
+				mask: false // 默认其实也是false，不应用遮罩，这样就可以直接返回
 			});
 			this.pageType = options.type ?? 'add'
 			if (options.from === 'addAgain') {
@@ -338,6 +347,16 @@
 			}
 			// 异步执行初始化，以便catch错误并隐藏loading
 			this.initializePageData(options);
+			if (options.amount) {
+				this.amount = options.amount; // 假设你的金额输入框绑定了 this.amount
+				this.keyboardInfo.balance = options.amount; // 如果你用 keyboardInfo.balance 作为金额输入
+			}
+			// 如果有传入 tab 参数，切换到对应的 tab
+			if (options.tab !== undefined) {
+				this.$nextTick(() => {
+					this.$refs.tabs.clickHandler({}, parseInt(options.tab));
+				});
+			}
 		},
 		onShow() {
 			// 获取用户秒记列表和模板列表
@@ -715,6 +734,20 @@
 					});
 					// 弹出订阅消息
 					this.subDayNotification()
+					
+					// 检查预算提醒 (在显示 Toast 和导航之前)
+					if (this.expendOrIncomeInfo.bill_type === 0) { // 仅支出类型检查
+						await this.checkBudgetAfterSave(this.expendOrIncomeInfo.bill_amount, this.expendOrIncomeInfo.bill_type);
+					}
+					
+					// 如果是收入，处理存钱目标
+					if (this.expendOrIncomeInfo.bill_type === 1) {
+						await this.processSavingGoalsAfterIncome(this.expendOrIncomeInfo.bill_amount);
+					}
+					
+					// 确保所有新增账单操作后都通知提醒页面更新
+					uni.$emit('savingGoalsMightUpdate');
+					
 					setTimeout(() => {
 						uni.switchTab({
 							url:"/pages/index/index"
@@ -780,6 +813,15 @@
 					});
 					// 弹出订阅消息
 					this.subDayNotification()
+					
+					// 检查预算提醒 (在显示 Toast 和导航之前)
+					// 转账也视为支出的一部分进行预算检查，金额为转账金额+手续费
+					const totalTransferExpense = this.transferAccountInfo.transfer_amount + this.transferAccountInfo.bill_amount;
+					await this.checkBudgetAfterSave(totalTransferExpense, 2); // bill_type 2 for transfer
+					
+					// 确保所有新增账单操作后都通知提醒页面更新
+					uni.$emit('savingGoalsMightUpdate');
+
 					setTimeout(() => {
 						uni.switchTab({
 							url:"/pages/index/index"
@@ -855,7 +897,7 @@
 						asset_balance
 					})
 				}
-				uni.$emit('updateBillsList')
+				// uni.$emit('updateBillsList')
 				uni.$emit('updateMonthlyBillBalance')
 				// 等待资产异步更新完成
 				if (!this.isAddAgain) { // 如果不是"再记"，则触发首页资产更新（不等待）
@@ -880,7 +922,7 @@
 				await db.collection("mj-user-assets").doc(this.transferAccountInfo.destination_asset_id).update({
 					asset_balance: transferIntoAssetBalance
 				})
-				uni.$emit('updateBillsList')
+				// uni.$emit('updateBillsList')
 				uni.$emit('updateMonthlyBillBalance')
 				// 等待资产异步更新完成
 				if (!this.isAddAgain) { // 如果不是"再记"，则触发首页资产更新（不等待）
@@ -897,63 +939,65 @@
 					mask: true
 				});
 				try {
+					let billTypeToCheck = -1;
+					let amountToCheck = 0;
+
 					// 1 判断用户支出||收入||转账
 					// 2 进行表单验证
 					// 3 验证通过，更新bill，并更新资产
 					if(this.showTransferAccounts) {
 						// 类型为转账
-						// ... (省略部分验证和数据准备代码) ...
 						const hasAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id) ?? 'none'
 						if(hasAsset === 'none') {
+							uni.hideLoading();
 							uni.showToast({
 								title:"请更新资产",
 								icon:"none"
 							})
-							return // 需要在 uni.hideLoading() 之前 return
+							return;
 						}
-						// 表单验证失败返回false，成功返回true
 						const flag = await this.validatorTransferInfo()
 						if(!flag) {
-							// validatorTransferInfo 内部已经 showToast 了，这里不需要重复
-							uni.hideLoading(); // 确保在验证失败时也隐藏loading
-							return
+							uni.hideLoading();
+							return;
 						}
 						this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
 						this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
 						this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
 						await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
 							asset_id: this.transferAccountInfo.asset_id,
-							bill_amount: this.transferAccountInfo.bill_amount,
+							bill_amount: this.transferAccountInfo.bill_amount, // 手续费
 							bill_date: this.transferAccountInfo.bill_date,
 							bill_notes: this.transferAccountInfo.bill_notes,
 							bill_type: 2,
 							category_type: 'transfer',
 							destination_asset_id: this.transferAccountInfo.destination_asset_id,
-							transfer_amount: this.transferAccountInfo.transfer_amount
+							transfer_amount: this.transferAccountInfo.transfer_amount // 转账金额
 						})
-					// 更新金额模块
-						await this.updateInitAssetsBalance()
-					// 更新金额模块
-						await this.upDateUserTwoAssetBalance()
+						await this.updateInitAssetsBalance() // 返还初始资产
+						await this.upDateUserTwoAssetBalance() // 更新涉及的两个新资产
+						
+						billTypeToCheck = 2;
+						amountToCheck = this.transferAccountInfo.transfer_amount + this.transferAccountInfo.bill_amount;
+						await this.checkBudgetAfterSave(amountToCheck, billTypeToCheck);
 					} else {
 						// 类型为支出 || 收入
-						// ... (省略部分验证和数据准备代码) ...
 						const hasAsset = this.userAssets.find(item => item._id === this.expendOrIncomeInfo.asset_id) ?? 'none'
 						if(hasAsset === 'none') {
+							uni.hideLoading();
 							uni.showToast({
 								title:"请更新资产",
 								icon:"none"
 							})
-							return // 需要在 uni.hideLoading() 之前 return
+							return;
 						}
-						// 金额不能为0
 						if(Number(this.keyboardInfo.balance) === 0) {
+							uni.hideLoading();
 							uni.showToast({
 								title:"请填写金额",
 								icon:"none"
 							})
-							uni.hideLoading(); // 确保在验证失败时也隐藏loading
-							return
+							return;
 						}
 						this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
 						this.expendOrIncomeInfo.bill_notes =this.keyboardInfo.notes
@@ -964,16 +1008,32 @@
 							bill_notes: this.expendOrIncomeInfo.bill_notes,
 							bill_type: this.expendOrIncomeInfo.bill_type,
 							category_type: this.expendOrIncomeInfo.category_type,
-							transfer_amount: 0
+							transfer_amount: 0, // 非转账类型，transfer_amount 为0 或 null
+							destination_asset_id: null // 非转账类型，清空此字段
 						})
-					// 更新资产金额模块
-						await this.updateInitAssetsBalance()
-					// 更新资产金额模块
-						await this.upDateUserAssetBalance()
+						await this.updateInitAssetsBalance() // 返还初始资产
+						await this.upDateUserAssetBalance() // 更新涉及的一个新资产
+						
+						billTypeToCheck = this.expendOrIncomeInfo.bill_type;
+						amountToCheck = this.expendOrIncomeInfo.bill_amount;
 					}
+					
+					// 统一在此处检查预算
+					if (billTypeToCheck === 0) { // 仅支出或转账类型检查
+						await this.checkBudgetAfterSave(amountToCheck, billTypeToCheck);
+					}
+
+					// 如果是收入，处理存钱目标
+					if (this.expendOrIncomeInfo.bill_type === 1) {
+						await this.processSavingGoalsAfterIncome(this.expendOrIncomeInfo.bill_amount);
+					}
+					
+					// 确保所有编辑账单操作后都通知提醒页面更新
+					uni.$emit('savingGoalsMightUpdate');
+
 					uni.hideLoading();
 					uni.showToast({
-						title: '账单已更新', // 编辑时提示已更新
+						title: '账单已更新',
 						icon: 'success',
 						duration: 2000
 					});
@@ -1279,8 +1339,11 @@
 					})
 					return
 				}
-				const isSecondOne = secondName === this.secondOneData?.second_name
-				if (isSecondOne || secondName === '秒记1') {
+				// 使用计算属性来获取最新的秒记名称
+				const sOneName = this.keyboardSecondOneName;
+				const sTwoName = this.keyboardSecondTwoName;
+
+				if (secondName === sOneName) {
 					const index = this.templateList.findIndex(item => item._id === this.secondOneData?.template_id)
 					if (index !== -1) {
 						// 格式化模板
@@ -1293,7 +1356,7 @@
 							title: '未找到绑定的模板'
 						})
 					}
-				} else {
+				} else if (secondName === sTwoName) { // 明确比较，避免与默认值混淆
 					const index = this.templateList.findIndex(item => item._id === this.secondTwoData?.template_id)
 					if (index !== -1) {
 						// 格式化模板
@@ -1306,6 +1369,14 @@
 							title: '未找到绑定的模板'
 						})
 					}
+				} else {
+					// 如果传入的secondName与当前实际的秒记名称不符，可能是一个旧的缓存或默认值
+					// 这种情况理论上不应该发生，如果发生了，提示用户
+					console.warn("[DEBUG] addSecond: secondName mismatch - received:", secondName, "expected sOne:", sOneName, "or sTwo:", sTwoName);
+					uni.showToast({
+						icon: 'none',
+						title: '秒记数据可能已更新，请重试'
+					});
 				}
 			},
 			// 异步更新资产
@@ -1321,6 +1392,113 @@
 			// 订阅每日记账提醒
 			subDayNotification() {
 				subscribeMessage(['n2kSsJNErg1EWpRrKqTDz2yZvyqC-LH7pLmudAsWNDE'])
+			},
+			// 保存账单后检查预算是否超限
+			async checkBudgetAfterSave(billAmount, billType) {
+				console.log('Checking budget after save:', billAmount, billType);
+				// billType 0:支出, 1:收入, 2:转账 (转账也可能计入支出总额)
+				if (billType === 1) { // 收入不参与预算超限判断
+					return;
+				}
+
+				try {
+					const currentMonth = uni.$u.timeFormat(Date.now(), 'yyyy-mm');
+					const budgetRes = await db.collection('pockfi-user-budgets')
+						.where(`user_id == $cloudEnv_uid && budget_month == "${currentMonth}"`)
+						.limit(1)
+						.get();
+
+					if (budgetRes.result.data.length === 0 || !budgetRes.result.data[0].is_enabled) {
+						console.log('当月无预算或预算未启用');
+						return; // 没有预算或预算未启用
+					}
+
+					const budgetSettings = budgetRes.result.data[0];
+					const budgetAmount = budgetSettings.budget_amount; // 单位：分
+					const warningThreshold = budgetSettings.warning_threshold; // 百分比, e.g., 80
+
+					// 获取本月总支出 (包括刚刚保存的这笔)
+					const expenseRes = await db.collection("mj-user-bills")
+						.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && (bill_type == 0 || bill_type == 2)`)
+						.groupBy('bill_type') // 其实不需要groupBy，直接求和即可
+						.groupField('sum(bill_amount) as total_bill_amount, sum(transfer_amount) as total_transfer_amount') // transfer_amount 是转账目标金额
+						.get();
+					
+					let totalMonthlyExpense = 0;
+					if(expenseRes.result.data.length > 0){
+						expenseRes.result.data.forEach(item => {
+							if(item.bill_type === 0) totalMonthlyExpense += item.total_bill_amount;
+							if(item.bill_type === 2) totalMonthlyExpense += item.total_bill_amount + (item.total_transfer_amount || 0); // 手续费(bill_amount) + 转出金额(transfer_amount)
+						});
+					}
+					
+					console.log(`本月总支出: ${totalMonthlyExpense / 100}, 预算金额: ${budgetAmount / 100}, 阈值: ${warningThreshold}%`);
+
+					if (budgetAmount > 0 && (totalMonthlyExpense / budgetAmount * 100) >= warningThreshold) {
+						uni.showModal({
+							title: '预算提醒',
+							content: `您本月的支出已达到预算的 ${warningThreshold}%，请注意理性消费。`,
+							showCancel: false,
+							confirmText: '我知道了'
+						});
+					}
+				} catch (error) {
+					console.error('检查预算提醒失败:', error);
+				}
+			},
+			// 处理收入记账后的存钱目标逻辑
+			async processSavingGoalsAfterIncome(incomeAmountInCents) {
+				if (incomeAmountInCents <= 0) return;
+
+				try {
+					const goalsRes = await db.collection('pockfi-user-saving-goals')
+						.where({
+							user_id: db.env.uid,
+							is_completed: false,
+							is_enabled: true
+						})
+						.get();
+
+					if (goalsRes.result.data.length === 0) {
+						return; // 没有进行中的存钱目标
+					}
+
+					const activeGoals = goalsRes.result.data;
+					let completedGoalNamesThisTime = [];
+
+					for (const goal of activeGoals) {
+						const newCurrentAmount = (goal.current_amount || 0) + incomeAmountInCents;
+						let updateData = {
+							current_amount: newCurrentAmount
+						};
+
+						if (newCurrentAmount >= goal.target_amount) {
+							updateData.is_completed = true;
+							updateData.completion_date = Date.now();
+							updateData.completion_shown_to_user = true; // 在记账页提示后，标记为已展示
+							completedGoalNamesThisTime.push(goal.goal_name);
+						}
+						
+						try {
+							await db.collection('pockfi-user-saving-goals').doc(goal._id).update(updateData);
+						} catch (updateError) {
+							console.error(`更新存钱目标 ${goal._id} 失败: `, updateError);
+							// 单个目标更新失败不应阻塞其他目标或整体流程，但需要记录错误
+						}
+					}
+
+					if (completedGoalNamesThisTime.length > 0) {
+						uni.showModal({
+							title: '恭喜！目标达成！',
+							content: `您的存钱目标: "${completedGoalNamesThisTime.join('", "')}" 已成功达成！`,
+							showCancel: false,
+							confirmText: '太棒了'
+						});
+					}
+				} catch (error) {
+					console.error('处理存钱目标失败:', error);
+					// 这里不向用户显示toast，避免干扰记账成功的主流程
+				}
 			}
 		},
 		// 新增onBackPress生命周期函数

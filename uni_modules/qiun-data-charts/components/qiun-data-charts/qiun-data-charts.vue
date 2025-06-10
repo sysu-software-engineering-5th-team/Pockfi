@@ -66,7 +66,7 @@
     <!-- #endif -->
     <!-- 支付宝小程序 -->
     <!-- #ifdef MP-ALIPAY -->
-    <block v-if="ontouch">
+    <block v-if="_ontouch">
       <canvas
         :id="cid"
         :canvasId="cid"
@@ -82,7 +82,7 @@
         v-show="showchart"
       />
     </block>
-    <block v-if="!ontouch">
+    <block v-if="!_ontouch">
       <canvas
         :id="cid"
         :canvasId="cid"
@@ -99,7 +99,7 @@
     <!-- 其他小程序通过vue渲染图表 -->
     <!-- #ifdef MP-WEIXIN || MP-BAIDU || MP-QQ || MP-TOUTIAO || MP-KUAISHOU || MP-LARK || MP-JD || MP-360 -->
     <block v-if="type2d">
-      <view v-if="ontouch" @tap="_tap">
+      <view v-if="_ontouch" @tap="_tap">
         <canvas
           :id="cid"
           :canvasId="cid"
@@ -113,7 +113,7 @@
           v-show="showchart"
         />
       </view>
-      <view v-if="!ontouch" @tap="_tap">
+      <view v-if="!_ontouch" @tap="_tap">
         <canvas
           :id="cid"
           :canvasId="cid"
@@ -126,7 +126,7 @@
       </view>
     </block>
     <block v-if="!type2d">
-      <view v-if="ontouch" @tap="_tap">
+      <view v-if="_ontouch" @tap="_tap">
         <canvas
           :id="cid"
           :canvasId="cid"
@@ -139,7 +139,7 @@
           v-if="showchart"
         />
       </view>
-      <view v-if="!ontouch" >
+      <view v-if="!_ontouch" >
         <canvas
           :id="cid"
           :canvasId="cid"
@@ -320,7 +320,7 @@ export default {
     },
     ontouch: {
       type: Boolean,
-      default: false
+      default: true
     },
     onmouse: {
       type: Boolean,
@@ -414,6 +414,7 @@ export default {
       echartsOpts: {},
       drawData:{},
       lastDrawTime:null,
+      _ontouch: true,
     };
   },
   created(){
@@ -621,6 +622,12 @@ export default {
         this.showchart = false;
         this.mixinDatacomErrorMessage = null;
         this.reloading();
+      }
+    },
+    ontouch: {
+      immediate: true,
+      handler(newVal) {
+        this._ontouch = newVal;
       }
     }
   },

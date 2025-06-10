@@ -54,6 +54,12 @@
 			<uni-section class="section" title="其他" type="line" titleFontSize="32rpx"
 				titleColor="#212121"></uni-section>
 			<u-cell-group :border="false">
+				<u-cell title="设置" :isLink="true" @click="goSetting">
+					<uni-icons slot="icon" type="gear" size="36rpx"></uni-icons>
+				</u-cell>
+				<u-cell title="自动记账须知" :isLink="true" @click="Knowing">
+					<uni-icons slot="icon" type="chat" size="36rpx"></uni-icons>
+				</u-cell>
 				<u-cell :isLink="true" @click="clickAbout">
 					<view slot="title" class="about">
 						<view>
@@ -242,6 +248,11 @@
 					url: "/uni_modules/uni-id-pages/pages/userinfo/deactivate/deactivate"
 				})
 			},
+			Knowing() {
+				uni.navigateTo({
+					url: "/pagesMy/auto-accounting-guide/auto-accounting-guide"
+				})
+			},
 			// 页面挂载时获取数据  1 如果有缓存，获取缓存进行渲染  2 若无缓存，获取db数据，并赋值  3 获取用户使用天数 4 存入缓存
 			async getUserInfo() {
 				try {
@@ -290,6 +301,11 @@
 				const registerDateTimestamp = Date.parse(this.userInfo.registerDate)
 				let useDate = Date.now() - registerDateTimestamp
 				this.userInfo.useDate = Math.ceil(useDate / (1000 * 60 * 60 * 24))
+			},
+			goSetting() {
+				uni.navigateTo({
+					url: '/pagesMy/settings/settings'
+				})
 			}
 		},
 		// 分享功能

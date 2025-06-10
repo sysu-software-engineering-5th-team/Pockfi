@@ -186,6 +186,16 @@
 		},
 		// 添加onShow生命周期
 		async onShow() {
+			// 检查是否需要刷新数据
+			const needRefresh = uni.getStorageSync('needRefreshHome');
+			if (needRefresh) {
+				console.log('[Home] 检测到需要刷新数据');
+				// 清除刷新标记
+				uni.removeStorageSync('needRefreshHome');
+				// 刷新数据
+				await this.loadData();
+			}
+
 			// 判断用户是否登录，如果未登录 则跳转到登录页
 			const {uid} = uniCloud.getCurrentUserInfo()
 			if (!uid && (this.$mp.page.route !== 'pages/index/index' && this.$mp.page.route !== '/uni_modules/uni-id-pages/pages/login/login-withpwd') ) {
@@ -552,7 +562,33 @@
 					title:"功能开发中~",
 					icon:"none"
 				})
-			}
+			},
+
+			// 添加loadData方法
+			async loadData() {
+				// 显示加载提示
+				uni.showLoading({
+					title: '数据加载中...',
+					mask: true
+				});
+				
+				try {
+					// 获取用户资产列表
+					await this.getUserAssets();
+					// 获取首页顶部轮播所需的本月支出和本月收入
+					await this.getUserMonthlyBillBalance();
+					// 获取月度账单列表
+					await this.getMonthBillsToDisplay();
+				} catch (error) {
+					console.error('首页数据加载失败:', error);
+					uni.showToast({
+						title: '数据加载失败',
+						icon: 'error'
+					});
+				} finally {
+					uni.hideLoading();
+				}
+			},
 		},
 		// ---- 触底加载逻辑，从 bills.vue 迁移 ----
 		onReachBottom() {

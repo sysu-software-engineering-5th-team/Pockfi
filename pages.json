@@ -175,6 +175,12 @@
 					}
 
 				}, {
+					"path": "settings/settings",
+					"style": {
+						"navigationBarTitleText": "设置",
+						"enablePullDownRefresh": false
+					}
+				}, {
 					"path": "my-assets/my-assets",
 					"style": {
 						"navigationBarTitleText": "我的资产",
@@ -207,6 +213,13 @@
 					"path": "cron-accounting-edit/cron-accounting-edit",
 					"style": {
 						"navigationBarTitleText": "编辑任务",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "auto-accounting-guide/auto-accounting-guide",
+					"style": {
+						"navigationBarTitleText": "自动记账须知",
 						"enablePullDownRefresh": false
 					}
 				}

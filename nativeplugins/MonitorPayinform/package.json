@@ -1,0 +1,23 @@
+{
+	"name": "monitor_payinform",
+	"id": "MonitorPayinform",
+	"version": "1.0.0",
+	"description": "用于自动记录微信和支付宝账单的插件",
+	"_dp_type": "nativeplugin",
+	"_dp_nativeplugin": {
+		"android": {
+			"plugins": [
+				{
+				  "type": "module",
+				  "name": "MonitorPayinform",
+				  "class": "com.uniplugs.monitor_payinform.MainModule"
+				}
+			],
+			"integrateType": "aar",
+			"dependencies": [],
+			"permissions": [],
+			"minSdkVersion": "26"
+		}
+	}
+}
+

@@ -58,6 +58,8 @@
 <script>
 	import colorGradient from '../../uni_modules/uview-ui/libs/function/colorGradient';
 	import {getAssetsStyle} from "@/utils/icon-config.js";
+	// 金额处理工具
+	import { convertYuanToCent } from '@/utils/amount-utils.js'
 	const db = uniCloud.database()
 
 	export default {
@@ -94,6 +96,16 @@
 							required: true,
 							message: '请输入金额',
 							trigger: ['blur', 'change'],
+						},
+						{
+							validator: (rule, value, callback) => {
+								// 检查是否为负值
+								if (parseFloat(value) < 0) {
+									return false
+								}
+								return true
+							},
+							message: '资产余额不能为负值'
 						},
 						{
 							validator: (rule, value, callback) => {
@@ -150,7 +162,8 @@
 				this.$refs.uForm.validate().then(async () => {
 					try {
 						let userAsset = Object.assign({},this.assetInfo)
-						userAsset.asset_balance = Math.round(userAsset.asset_balance * 100)  // 单位改为分，由于计算精度问题，使用四舍五入
+						// 使用安全的转换方法将元转换为分
+						userAsset.asset_balance = convertYuanToCent(userAsset.asset_balance)
 						
 						if(!userAsset._id) {
 							// 新增资产前，检查是否已存在同类型同名资产

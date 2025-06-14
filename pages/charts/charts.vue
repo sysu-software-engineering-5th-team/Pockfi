@@ -265,7 +265,7 @@
 					const { bill_type, bill_amount } = bill;
 					categorizedBillsByBillType[bill_type] += bill_amount
 				}
-				this.monthlyBalance.monthlyExpend = categorizedBillsByBillType[0] + categorizedBillsByBillType[2]
+				this.monthlyBalance.monthlyExpend = categorizedBillsByBillType[0]
 				this.monthlyBalance.monthlyIncome = categorizedBillsByBillType[1]
 
 				// 根据账单类型bill_type进行分组  0 2:group0 ;  1 group1 
@@ -274,6 +274,10 @@
 				const groupedBills = {};
 
 				for (const bill of this.userBills) {
+					// 转账类型不计入分类统计
+					if (bill.bill_type === 2) {
+						continue;
+					}
 					const {
 						bill_type,
 						category_type,
@@ -401,7 +405,7 @@
 					let dayIncome = 0;
 					
 					for (const bill of dayData) {
-						if (bill.bill_type === 0 || bill.bill_type === 2) {
+						if (bill.bill_type === 0) {
 						  dayExpense += bill.bill_amount;
 						} else if (bill.bill_type === 1) {
 						  dayIncome += bill.bill_amount;

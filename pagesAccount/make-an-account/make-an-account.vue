@@ -196,6 +196,8 @@
 	import { formatOneTemplate } from '@/utils/formatTemplate.js'
 	// 订阅消息
 	import { subscribeMessage } from '@/utils/subscribeMessage.js'
+	// 金额处理工具
+	import { convertYuanToCent } from '@/utils/amount-utils.js'
 	const db = uniCloud.database()
 	export default {
 		data() {
@@ -704,7 +706,7 @@
 				});
 
 				try {
-					this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
+					this.expendOrIncomeInfo.bill_amount = convertYuanToCent(this.keyboardInfo.balance)
 					this.expendOrIncomeInfo.bill_notes = this.keyboardInfo.notes
 					await db.collection("mj-user-bills").add({
 						...this.expendOrIncomeInfo
@@ -778,9 +780,9 @@
 				});
 
 				try {
-					this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
+					this.transferAccountInfo.bill_amount = convertYuanToCent(this.transferInfo.serviceCharge)
 					this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
-					this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
+					this.transferAccountInfo.transfer_amount = convertYuanToCent(this.keyboardInfo.balance)
 					// 组合备注
 					const transferOutAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id)
 					const transferOutTitle = transferOutAsset.asset_name || transferOutAsset.assetStyle.title
@@ -883,7 +885,7 @@
 			// 更新用户资产金额   0  支出    1  收入
 			async upDateUserAssetBalance() {
 				let assetBalance = this.userAssets.find(item => item._id === this.expendOrIncomeInfo.asset_id).asset_balance
-				assetBalance = Math.round(assetBalance * 100)  // 转换单位为分
+				assetBalance = convertYuanToCent(assetBalance)  // 转换单位为分
 				// console.log(assetBalance);
 				// console.log('bill_type',this.expendOrIncomeInfo.bill_type);
 				if(this.expendOrIncomeInfo.bill_type === 0) {
@@ -909,8 +911,8 @@
 				let transferOutAssetBalance = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id).asset_balance
 				let transferIntoAssetBalance = this.userAssets.find(item => item._id === this.transferAccountInfo.destination_asset_id).asset_balance
 				
-				transferOutAssetBalance = Math.round(transferOutAssetBalance * 100)  // 转换单位为分
-				transferIntoAssetBalance = Math.round(transferIntoAssetBalance * 100)  // 转换单位为分
+				transferOutAssetBalance = convertYuanToCent(transferOutAssetBalance)  // 转换单位为分
+				transferIntoAssetBalance = convertYuanToCent(transferIntoAssetBalance)  // 转换单位为分
 				// 转出资产余额 = 转出资产余额 - 手续费 - 转账金额  注意单位为分
 				transferOutAssetBalance = transferOutAssetBalance - this.transferAccountInfo.bill_amount - this.transferAccountInfo.transfer_amount
 				// 转入资产余额 = 转入资产余额 + 转账金额
@@ -961,9 +963,9 @@
 							uni.hideLoading();
 							return;
 						}
-						this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
+						this.transferAccountInfo.bill_amount = convertYuanToCent(this.transferInfo.serviceCharge)
 						this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
-						this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
+						this.transferAccountInfo.transfer_amount = convertYuanToCent(this.keyboardInfo.balance)
 						await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
 							asset_id: this.transferAccountInfo.asset_id,
 							bill_amount: this.transferAccountInfo.bill_amount, // 手续费
@@ -999,7 +1001,7 @@
 							})
 							return;
 						}
-						this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
+						this.expendOrIncomeInfo.bill_amount = convertYuanToCent(this.keyboardInfo.balance)
 						this.expendOrIncomeInfo.bill_notes =this.keyboardInfo.notes
 						await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
 							asset_id: this.expendOrIncomeInfo.asset_id,
@@ -1059,12 +1061,12 @@
 					let transferIntoAssetBalance = this.userAssets.find(item => item._id === this.editInitBill.destination_asset_id)?.asset_balance ?? 'none'
 					// console.log('transferIntoAssetBalance',transferIntoAssetBalance);
 					// 转换单位为分
-					const bill_amount = Math.round(this.editInitBill.bill_amount * 100)
-					const transfer_amount = Math.round(this.editInitBill.transfer_amount * 100)
+					const bill_amount = convertYuanToCent(this.editInitBill.bill_amount)
+					const transfer_amount = convertYuanToCent(this.editInitBill.transfer_amount)
 					
 					// 返还规则：用户账单对应资产没有被用户删除时，进行返还，如果删除了，不返还
 					if(transferOutAssetBalance !== 'none') {
-						transferOutAssetBalance = Math.round(transferOutAssetBalance * 100)
+						transferOutAssetBalance = convertYuanToCent(transferOutAssetBalance)
 						// 返还转出资产余额 = 转出资产余额 + 手续费 + 转账金额  注意单位为分
 						transferOutAssetBalance = transferOutAssetBalance +bill_amount + transfer_amount
 						// 更新
@@ -1076,7 +1078,7 @@
 						this.userAssets.find(item => item._id === this.editInitBill.asset_id).asset_balance += this.editInitBill.bill_amount + this.editInitBill.transfer_amount
 					}
 					if(transferIntoAssetBalance !== 'none') {
-						transferIntoAssetBalance = Math.round(transferIntoAssetBalance * 100)
+						transferIntoAssetBalance = convertYuanToCent(transferIntoAssetBalance)
 						// 返还转入资产余额 = 转入资产余额 - 转账金额
 						transferIntoAssetBalance = transferIntoAssetBalance - transfer_amount
 						await db.collection("mj-user-assets").doc(this.editInitBill.destination_asset_id).update({
@@ -1092,8 +1094,8 @@
 					let assetBalance = this.userAssets.find(item => item._id === this.editInitBill.asset_id)?.asset_balance ?? 'none'
 					if(assetBalance === 'none') return
 					// console.log("返还");
-					assetBalance = Math.round(assetBalance * 100)  // 转换单位为分
-					const bill_amount = Math.round(this.editInitBill.bill_amount * 100)
+					assetBalance = convertYuanToCent(assetBalance)  // 转换单位为分
+					const bill_amount = convertYuanToCent(this.editInitBill.bill_amount)
 					if(this.editInitBill.bill_type == 0) {
 						const asset_balance = assetBalance + bill_amount
 						await db.collection("mj-user-assets").doc(this.editInitBill.asset_id).update({
@@ -1131,7 +1133,7 @@
 							uni.showToast({ title:"请选择资产", icon:"none" });
 							uni.hideLoading(); return;
 						}
-						this.expendOrIncomeInfo.bill_amount = Math.round(this.keyboardInfo.balance * 100)
+						this.expendOrIncomeInfo.bill_amount = convertYuanToCent(this.keyboardInfo.balance)
 						this.expendOrIncomeInfo.bill_notes = this.keyboardInfo.notes
 						const {asset_id,bill_amount,bill_notes,bill_type,category_type} = this.expendOrIncomeInfo
 						const res = await db.collection("mj-user-templates").add({
@@ -1151,9 +1153,9 @@
 							uni.hideLoading(); // validatorTransferInfo 内部有 toast
 							return;
 						}
-						this.transferAccountInfo.bill_amount = Math.round(this.transferInfo.serviceCharge * 100)
+						this.transferAccountInfo.bill_amount = convertYuanToCent(this.transferInfo.serviceCharge)
 						this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
-						this.transferAccountInfo.transfer_amount = Math.round(this.keyboardInfo.balance * 100)
+						this.transferAccountInfo.transfer_amount = convertYuanToCent(this.keyboardInfo.balance)
 						// ... (组合备注) ...
 						const transferOutAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id)
 						const transferOutTitle = transferOutAsset.asset_name || transferOutAsset.assetStyle.title
@@ -1396,8 +1398,8 @@
 			// 保存账单后检查预算是否超限
 			async checkBudgetAfterSave(billAmount, billType) {
 				console.log('Checking budget after save:', billAmount, billType);
-				// billType 0:支出, 1:收入, 2:转账 (转账也可能计入支出总额)
-				if (billType === 1) { // 收入不参与预算超限判断
+				// billType 0:支出, 1:收入, 2:转账 (内部转账不计入支出总额)
+				if (billType === 1 || billType === 2) { // 收入和转账不参与预算超限判断
 					return;
 				}
 
@@ -1417,19 +1419,16 @@
 					const budgetAmount = budgetSettings.budget_amount; // 单位：分
 					const warningThreshold = budgetSettings.warning_threshold; // 百分比, e.g., 80
 
-					// 获取本月总支出 (包括刚刚保存的这笔)
+					// 获取本月总支出 (包括刚刚保存的这笔)，只查询支出类型
 					const expenseRes = await db.collection("mj-user-bills")
-						.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && (bill_type == 0 || bill_type == 2)`)
-						.groupBy('bill_type') // 其实不需要groupBy，直接求和即可
-						.groupField('sum(bill_amount) as total_bill_amount, sum(transfer_amount) as total_transfer_amount') // transfer_amount 是转账目标金额
+						.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && bill_type == 0`)
+						.groupBy('user_id')
+						.groupField('sum(bill_amount) as total_expense')
 						.get();
 					
 					let totalMonthlyExpense = 0;
 					if(expenseRes.result.data.length > 0){
-						expenseRes.result.data.forEach(item => {
-							if(item.bill_type === 0) totalMonthlyExpense += item.total_bill_amount;
-							if(item.bill_type === 2) totalMonthlyExpense += item.total_bill_amount + (item.total_transfer_amount || 0); // 手续费(bill_amount) + 转出金额(transfer_amount)
-						});
+						totalMonthlyExpense = expenseRes.result.data[0].total_expense || 0;
 					}
 					
 					console.log(`本月总支出: ${totalMonthlyExpense / 100}, 预算金额: ${budgetAmount / 100}, 阈值: ${warningThreshold}%`);

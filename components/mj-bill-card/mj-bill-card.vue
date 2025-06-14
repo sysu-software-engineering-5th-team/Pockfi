@@ -49,6 +49,8 @@
 
 <script>
 	import {getAllIconList, getAssetsStyle} from "@/utils/icon-config.js";
+	// 金额处理工具
+	import { convertYuanToCent } from '@/utils/amount-utils.js'
 	const db = uniCloud.database()
 	export default {
 		name: "mj-bill-card",
@@ -80,11 +82,10 @@
 			};
 		},
 		computed: {
-			// 支出 = 支出 + 手续费
+			// 支出 = 仅支出类型，不包括转账（转账只是资产间转移，不是真正的支出）
 			totalExpenditure() {
 				const expendBills = this.userBills.filter(bill => bill.bill_type === 0)
-				const transferBills = this.userBills.filter(bill => bill.bill_type === 2)
-				return (expendBills.reduce((prev,next) => prev + next.bill_amount ,0) + transferBills.reduce((prev,next) => prev + next.bill_amount ,0)).toFixed(2)
+				return expendBills.reduce((prev,next) => prev + next.bill_amount ,0).toFixed(2)
 			},
 			// 收入
 			totalIncome() {
@@ -155,13 +156,13 @@
 			// 更新资产金额
 			async updateAssetBalance(bill) {
 				// 所选账单的金额  单位换为分
-				const bill_amount = Math.round(bill.bill_amount * 100)
+				const bill_amount = convertYuanToCent(bill.bill_amount)
 				if(bill.bill_type === 0 || bill.bill_type === 1) {
 					// 找出该账单使用资产对应的资产余额
 					let assetBalance = this.userAssets.find(item => item._id === bill.asset_id[0]?._id)?.asset_balance ?? 'none'
 					// 如果取不到资产余额，即用户账单对应的资产以及被删除了，则return
 					if(assetBalance === 'none') return
-					assetBalance = Math.round(assetBalance * 100)  // 转换单位为分
+					assetBalance = convertYuanToCent(assetBalance)  // 转换单位为分
 					// console.log(assetBalance);
 					if(bill.bill_type === 0) {
 						const asset_balance = assetBalance + bill_amount
@@ -181,7 +182,7 @@
 					let transferIntoAssetBalance = this.userAssets.find(item => item._id === bill.destination_asset_id[0]?._id)?.asset_balance ?? 'none'
 					// 如果取不到资产余额，即用户账单对应的资产已经被删除了，则不执行
 					if(transferOutAssetBalance != 'none') {
-						transferOutAssetBalance = Math.round(transferOutAssetBalance * 100)  // 转换单位为分
+						transferOutAssetBalance = convertYuanToCent(transferOutAssetBalance)  // 转换单位为分
 						// 删除账单后转出资产余额 = 转出资产余额 + 手续费 + 转账金额  注意单位为分
 						transferOutAssetBalance = transferOutAssetBalance + bill_amount + bill.transfer_amount
 						// 更新
@@ -190,7 +191,7 @@
 						})
 					}
 					if(transferIntoAssetBalance != 'none') {
-						transferIntoAssetBalance = Math.round(transferIntoAssetBalance * 100)  // 转换单位为分
+						transferIntoAssetBalance = convertYuanToCent(transferIntoAssetBalance)  // 转换单位为分
 						// 删除账单后转入资产余额 = 转入资产余额 - 转账金额
 						transferIntoAssetBalance = transferIntoAssetBalance - bill.transfer_amount
 						await db.collection("mj-user-assets").doc(bill.destination_asset_id[0]._id).update({

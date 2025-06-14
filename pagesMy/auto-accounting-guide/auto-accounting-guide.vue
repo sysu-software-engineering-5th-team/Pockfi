@@ -14,17 +14,17 @@
 				<view class="section">
 					<view class="section-title">需要开启的权限</view>
 					<view class="section-content">
-						<view class="feature-item">• 在“我的”-“设置”处开启电池白名单和监听权限</view>
-						<view class="feature-item">• 自行到设置开启应用自启动权限</view>
+						<view class="feature-item">• 在“我的”-“设置”处选择开启监听权限</view>
+						<view class="feature-item">• 在“我的”-“设置”处选择开启无障碍服务权限</view>
+						<view class="feature-item">• 自行到设置开启应用自启动、悬浮窗(在其他应用上层显示)、关联启动和后台弹出界面权限</view>
 					</view>
 				</view>
 				
 				<view class="section">
 					<view class="section-title">局限性</view>
 					<view class="section-content">
-						<view class="feature-item">1. 目前应用在后台运行时，当收到支出收入的消息时，无法弹窗提醒用户打开应用，需要用户自行打开应用</view>
-						<view class="feature-item">2. 后台完全杀死应用时，检测不到消息</view>
-						<view class="feature-item">3. 目前能检测的关键字和应用有限</view>
+						<view class="feature-item">1. 后台完全杀死应用时，检测不到消息</view>
+						<view class="feature-item">2. 目前能检测的关键字和应用有限</view>
 					</view>
 				</view>
 			</view>

@@ -1,9 +1,9 @@
 {
     "name" : "Pockfi",
-    "appid" : "__UNI__EC0408B",
+    "appid" : "__UNI__DE62703",
     "description" : "",
-    "versionName" : "1.0.6",
-    "versionCode" : "106",
+    "versionName" : "1.1.0",
+    "versionCode" : 110,
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,
@@ -16,7 +16,8 @@
             "delay" : 0
         },
         "modules" : {
-            "OAuth" : {}
+            "OAuth" : {},
+            "Camera" : {}
         },
         "background" : {
             "title" : "通知监听服务",
@@ -95,6 +96,20 @@
                 "__plugin_info__" : {
                     "name" : "listener",
                     "description" : "监听插件",
+                    "platforms" : "Android",
+                    "url" : "",
+                    "android_package_name" : "",
+                    "ios_bundle_id" : "",
+                    "isCloud" : false,
+                    "bought" : -1,
+                    "pid" : "",
+                    "parameters" : {}
+                }
+            },
+            "MonitorPayinform" : {
+                "__plugin_info__" : {
+                    "name" : "monitor_payinform",
+                    "description" : "用于自动记录微信和支付宝账单的插件",
                     "platforms" : "Android",
                     "url" : "",
                     "android_package_name" : "",

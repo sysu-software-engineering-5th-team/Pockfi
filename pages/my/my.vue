@@ -66,7 +66,7 @@
 							关于口袋智富
 						</view>
 						<view class="about-tag">
-							<u-tag text="🎉v1.0.0" size="mini" @click="clickAbout"></u-tag>
+							<u-tag text="🎉v1.1.0" size="mini" @click="clickAbout"></u-tag>
 						</view>
 					</view>
 					<uni-icons slot="icon" type="info" size="36rpx"></uni-icons>

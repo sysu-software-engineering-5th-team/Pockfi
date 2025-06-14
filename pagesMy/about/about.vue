@@ -3,7 +3,7 @@
 		<view class="logo" @click="subMsg">
 			<u--image src="/static/logo.png" width="72px" height="72px" radius="20px" ></u--image>
 			<view class="version">
-				Version：<text class="highlight">1.0.0</text>(Beta)
+				Version：<text class="highlight">1.1.0</text>
 			</view>
 		</view>
 		<view class="main">
@@ -30,11 +30,21 @@
 				<view class="about-textarea">
 					口袋智富基于<text class="highlight">妙记 (MiaoJi)</text>项目进行二次开发，感谢原作者的开源贡献。原项目地址：<text class="highlight">github.com/ztkuaikuai/MiaoJi</text>
 				</view>
-				<view class="about-textarea">
-					本项目同样采用MIT开源协议，您可以自由使用和修改。
-				</view>
 			</mj-card>
 			<u-divider text="版本更新说明"></u-divider>
+			<mj-card title="🎉1.1.0" subTitle="2025-06-14">
+				<view class="one-update">
+					<view class="row highlight">
+						⭐新增原生功能：无障碍服务，主动记录支付宝、微信支付页面，支付宝账单
+					</view>
+					<view class="row highlight">
+						⭐新增原生功能：监听通知功能，主动记录通知栏消息，提取金额和关键词
+					</view>
+					<view class="row">
+						🔧解决资产精度报错，修改预算计算逻辑
+					</view>
+				</view>
+			</mj-card>			
 			<mj-card title="🎉1.0.0" subTitle="2025-06-01">
 				<view class="one-update">
 					<view class="row highlight">

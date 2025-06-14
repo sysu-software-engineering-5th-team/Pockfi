@@ -65,10 +65,10 @@
 			<uni-section title="股票K线数据 (iTick API)" type="line">
 				<view class="stock-query-form">
 					<uni-forms ref="stockForm" :modelValue="{ iTickApiToken, stockSymbolInput }">
-						<!-- <uni-forms-item label="API Token" name="iTickApiToken">
+						<uni-forms-item label="API Token" name="iTickApiToken">
 							<uni-easyinput type="text" v-model="iTickApiToken" placeholder="请输入您的iTick API Token" />
 							<view class="form-item-tip">请从iTick获取您的API Token。</view>
-						</uni-forms-item> -->
+						</uni-forms-item>
 						<uni-forms-item label="股票代码" name="stockSymbolInput">
 							<uni-easyinput type="text" v-model="stockSymbolInput" placeholder="例如: 700.HK 或 AAPL.US" />
 							<view class="form-item-tip">格式: 代码.地区 (地区大写)</view>
@@ -163,7 +163,7 @@
 				},
 
 				// iTick API 股票查询相关数据
-				iTickApiToken: '5f2fbe8e806a47c3a01824b8651778afe98ede2b5125493d88a0cc12c06b2a3a', // 现在直接提供一个免费API
+				iTickApiToken: '', // 用于iTick API身份验证的令牌，会优先从本地存储加载，若为空则使用默认值
 				stockSymbolInput: '', // 用户输入的股票代码 (格式: CODE.REGION)
 				
 				klineDataArray: [], // 存储获取到的K线数据
@@ -252,6 +252,10 @@
 					this.formData.interestMethod = 'manual'; // 强制切回手动，因为自动没实现
 				}
 				this.calculationResult.show = false; // 利率方式改变时隐藏旧结果
+			},
+			// 监听iTickApiToken的变化，并将其保存到本地存储中
+			iTickApiToken(newVal) {
+				uni.setStorageSync('iTickApiToken', newVal);
 			}
 		},
 		methods: {
@@ -346,10 +350,9 @@
 			},
 
 			async fetchKlineData() {
-				if (!this.iTickApiToken) {
-					uni.showToast({ title: '请输入 iTick API Token', icon: 'none' });
-					return;
-				}
+				const defaultToken = '8deef432e4ff4c2f95b0f28085b0204fd8155c8fc51d4f9e9cf9f882e6fa2bcd';
+				const tokenToUse = this.iTickApiToken || defaultToken;
+
 				if (!this.stockSymbolInput) {
 					uni.showToast({ title: '请输入股票代码 (格式如: 700.HK)', icon: 'none' });
 					return;
@@ -386,7 +389,7 @@
 						data: requestData,
 						header: {
 							'accept': 'application/json',
-							'token': this.iTickApiToken 
+							'token': tokenToUse
 						},
 						timeout: 10000, // 请求超时时间，单位毫秒
 					});
@@ -557,6 +560,9 @@
 			}
 		},
 		mounted() {
+			// 页面加载时，尝试从本地存储中读取API Token，如果为空则使用一个默认的
+			this.iTickApiToken = uni.getStorageSync('iTickApiToken') || '8deef432e4ff4c2f95b0f28085b0204fd8155c8fc51d4f9e9cf9f882e6fa2bcd';
+			
 			// 初始化时，确保 formData.term 基于 termIndex (如果初始是定期)
 			if(this.formData.depositType === 'fixed'){
 				this.formData.term = this.terms[this.termIndex].value;

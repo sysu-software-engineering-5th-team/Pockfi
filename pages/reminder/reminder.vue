@@ -224,6 +224,8 @@
 </template>
 
 <script>
+// 金额处理工具
+import { convertYuanToCent } from '@/utils/amount-utils.js'
 const db = uniCloud.database()
 
 export default {
@@ -337,22 +339,21 @@ export default {
 		async getMonthlyExpense() {
 			try {
 				const currentMonth = uni.$u.timeFormat(Date.now(), 'yyyy-mm')
+				// 只查询类型为0（支出）的账单
 				const res = await db.collection("mj-user-bills")
-					.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}"`)
-					.groupBy('bill_type')
-					.groupField('sum(bill_amount) as bill_amount_total, sum(transfer_amount) as total_transfer_amount')
+					.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && bill_type == 0`)
+					.groupBy('user_id') // 仍然需要一个groupBy来使用groupField
+					.groupField('sum(bill_amount) as total_expense')
 					.get()
 				
-				const expenseData = res.result.data.find(item => item.bill_type === 0);
-				const transferData = res.result.data.find(item => item.bill_type === 2);
-
-				const monthlyExpenseTemp = expenseData ? expenseData.bill_amount_total / 100 : 0;
-				const transferFeeTemp = transferData ? transferData.bill_amount_total / 100 : 0;
-				const transferAmountTemp = transferData ? (transferData.total_transfer_amount || 0) / 100 : 0;
-
-				this.monthlyExpense = Number(monthlyExpenseTemp) + Number(transferFeeTemp) + Number(transferAmountTemp);
+				if (res.result.data.length > 0) {
+					this.monthlyExpense = (res.result.data[0].total_expense || 0) / 100;
+				} else {
+					this.monthlyExpense = 0
+				}
 			} catch (error) {
 				console.error('获取月支出失败:', error)
+				this.monthlyExpense = 0 // 出错时重置为0
 			}
 		},
 		
@@ -563,7 +564,7 @@ export default {
 			try {
 				const budgetData = {
 					budget_month: this.currentBudget.month,
-					budget_amount: Math.round(Number(this.budgetForm.amount) * 100),
+					budget_amount: convertYuanToCent(Number(this.budgetForm.amount)),
 					is_enabled: true, // 默认启用
 					warning_threshold: Number(this.budgetForm.warningThreshold) || 80
 					// update_date 会由数据库自动处理
@@ -629,7 +630,7 @@ export default {
 			try {
 				const goalData = {
 					goal_name: this.goalForm.goalName,
-					target_amount: Math.round(Number(this.goalForm.targetAmount) * 100),
+					target_amount: convertYuanToCent(Number(this.goalForm.targetAmount)),
 					start_date: new Date(this.goalForm.startDate).getTime(),
 					end_date: new Date(this.goalForm.endDate).getTime()
 					// creation_date 和 update_date 会由数据库自动处理

@@ -83,8 +83,8 @@ module.exports = {
 			const yesterTransferBalanceTemp = yesterTransferBalanceTempObj && yesterTransferBalanceTempObj.bill_amount_total ? (yesterTransferBalanceTempObj.bill_amount_total / 100) : '0'
 			const yesterIncomeTempObj = yesterdayRes.data.filter(item => item.bill_type === 1)[0]
 			const yesterIncomeTemp = yesterIncomeTempObj && yesterIncomeTempObj.bill_amount_total ? (yesterIncomeTempObj.bill_amount_total / 100) : '0'
-			// 昨日支出和收入
-			const yesterdayExpense = Number(yesterExpenseTemp) + Number(yesterTransferBalanceTemp)
+			// 昨日支出和收入（转账不计入支出，因为只是资产间转移）
+			const yesterdayExpense = Number(yesterExpenseTemp)
 			const yesterdayIncome = Number(yesterIncomeTemp)
 			
 			// 获取本月支出
@@ -93,10 +93,8 @@ module.exports = {
 			console.log(res)
 			const monthlyExpenseTempObj = res.data.filter(item => item.bill_type === 0)[0]
 			const monthlyExpenseTemp = monthlyExpenseTempObj && monthlyExpenseTempObj.bill_amount_total ? (monthlyExpenseTempObj.bill_amount_total / 100) : '0'
-			const transferBalanceTempObj = res.data.filter(item => item.bill_type === 2)[0]
-			const transferBalanceTemp = transferBalanceTempObj && transferBalanceTempObj.bill_amount_total ? (transferBalanceTempObj.bill_amount_total / 100) : '0'
-			// 月支出 = 月支出 + 转账的手续费
-			const monthlyExpense = Number(monthlyExpenseTemp) + Number(transferBalanceTemp)
+			// 月支出仅计算支出类型，不包括转账（转账只是资产间转移，不是真正的支出）
+			const monthlyExpense = Number(monthlyExpenseTemp)
 			
 			// 发送订阅消息
 			let response = await uniSubscribemsg.sendSubscribeMessage({

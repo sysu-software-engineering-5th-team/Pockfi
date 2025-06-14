@@ -63,7 +63,21 @@
 
 4. 在 `manifest.json`​ 中更新你的配置。微信小程序配置，将 appid 替换成你自己小程序的 appid ；基础配置，将「uni-app 应用标识」重新获取，利用查找替换将项目中带有 `__UNI__EE89725`​ 的替换成你自己的。
 
-5. 点击 HBuilder 顶部「运行-运行到小程序模拟器-微信开发者工具」运行项目~
+5. 打包自定义基座：运行 -> 运行到手机或模拟器 -> 制作自定义调试基座，选择使用自有证书，内容如下：
+
+   - 证书文件：项目.keystore文件
+
+   - 证书别名：`__uni__b017c90`
+
+   - 证书库密码和私钥密码：vP00j7xp
+
+   - 选择传统打包
+
+     请查看 “我的” - “自动记账须知”中的相关说明。 开发者注意：
+
+   - 目前uniapp控制台会报错：[JS Framework] Failed to execute the callback function:TypeError: Cannot read property 'checkServiceStatus' of undefined，这是原生插件调用信息，完全不会影响软件运行
+
+   - uniapp打包时未添加oauth模块，调试时打开应用会有这个提示，打包使用原生插件的app会有该提示，后续改进，目前点击“忽略”即可。
 
 6. 配置小程序合法域名，请[参考文档](https://doc.dcloud.net.cn/uniCloud/publish.html#useinmp)
 
@@ -288,6 +302,7 @@ uni.scss                // 全局的样式文件
 
   
 
+
 - [x] 编辑账目记录
 
   <div>
@@ -318,6 +333,7 @@ uni.scss                // 全局的样式文件
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决 时间: 2025-06-02</div></div>
 
   
+
 
 - [ ] 手动编辑消费类型
 
@@ -668,13 +684,13 @@ uni.scss                // 全局的样式文件
       <div>
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
           时间: 2025-06-09</div></div>
-
+    
     - [x] 超长用户名：客户端正确提示
-
+    
     - [x] 超长昵称：客户端正确提示
-
+    
     - [x] 超长密码：客户端正确限制超额输入
-
+    
     - [x] 不同意用户服务协议：客户端正确提示并可以选择同意或取消
 
   - 改进建议(可选)：

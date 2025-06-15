@@ -194,32 +194,29 @@
 						</u-input>
 					</u-form-item>
 					<u-form-item label="开始日期" prop="startDate" label-width="80">
-						<u-input v-model="goalForm.startDate" placeholder="选择开始日期" readonly border="surround" @click.native="prepareStartDatePicker"></u-input>
+						<picker mode="date" :value="goalForm.startDate" :end="todayDate" @change="onStartDateChange">
+							<view class="picker-input-container">
+								<text v-if="goalForm.startDate">{{ goalForm.startDate }}</text>
+								<text v-else class="picker-input-placeholder">选择开始日期</text>
+							</view>
+						</picker>
 					</u-form-item>
 					<u-form-item label="目标日期" prop="endDate" label-width="80">
-						<u-input v-model="goalForm.endDate" placeholder="选择目标完成日期" readonly border="surround" @click.native="prepareEndDatePicker"></u-input>
+						<picker mode="date" :value="goalForm.endDate" :start="minEndDate" @change="onEndDateChange" :disabled="!goalForm.startDate">
+							<view class="picker-input-container" :class="{ 'disabled': !goalForm.startDate }">
+								<text v-if="goalForm.endDate">{{ goalForm.endDate }}</text>
+								<text v-else class="picker-input-placeholder">
+									{{ goalForm.startDate ? '选择目标完成日期' : '请先选开始日期' }}
+								</text>
+							</view>
+						</picker>
 					</u-form-item>
 				</u-form>
 			</view>
 		</u-modal>
 
 		<!-- 日期选择器 -->
-		<u-datetime-picker 
-			:show="showStartDatePicker"
-			v-model="pickerStartDateTimestamp"
-			mode="date"
-			@confirm="onStartDateConfirm"
-			@cancel="showStartDatePicker = false"
-		></u-datetime-picker>
 		
-		<u-datetime-picker 
-			:show="showEndDatePicker"
-			v-model="pickerEndDateTimestamp"
-			:min-date="minTimestampForEndDate"
-			mode="date"
-			@confirm="onEndDateConfirm"
-			@cancel="showEndDatePicker = false"
-		></u-datetime-picker>
 	</view>
 </template>
 
@@ -250,8 +247,6 @@ export default {
 			// 弹窗控制
 			showBudgetModal: false,
 			showGoalModal: false,
-			showStartDatePicker: false,
-			showEndDatePicker: false,
 			
 			// 表单数据
 			budgetForm: {
@@ -282,6 +277,20 @@ export default {
 		budgetUsagePercent() {
 			if (this.currentBudget.amount <= 0) return 0
 			return Math.floor((this.monthlyExpense / this.currentBudget.amount) * 100)
+		},
+		
+		// for picker: 'YYYY-MM-DD'
+		todayDate() {
+			return uni.$u.timeFormat(Date.now(), 'yyyy-mm-dd');
+		},
+		
+		minEndDate() {
+			if (!this.goalForm.startDate) {
+				return this.todayDate;
+			}
+			const startDate = new Date(this.goalForm.startDate);
+			startDate.setDate(startDate.getDate() + 1);
+			return uni.$u.timeFormat(startDate.getTime(), 'yyyy-mm-dd');
 		}
 	},
 	
@@ -625,13 +634,13 @@ export default {
 			}
 			
 			try {
-				const endDate = new Date(this.goalForm.endDate);
+				const endDate = new Date(this.goalForm.endDate.replace(/-/g, '/'));
 				endDate.setHours(23, 59, 59, 999); // 设置为当天的最后一毫秒
 				
 				const goalData = {
 					goal_name: this.goalForm.goalName,
 					target_amount: convertYuanToCent(Number(this.goalForm.targetAmount)),
-					start_date: new Date(this.goalForm.startDate).getTime(),
+					start_date: new Date(this.goalForm.startDate.replace(/-/g, '/')).getTime(),
 					end_date: endDate.getTime()
 					// creation_date 和 update_date 会由数据库自动处理
 				}
@@ -679,13 +688,6 @@ export default {
 				startDate: uni.$u.timeFormat(goal.start_date, 'yyyy-mm-dd'),
 				endDate: uni.$u.timeFormat(goal.end_date, 'yyyy-mm-dd')
 			}
-			// 初始化picker的v-model值
-			this.pickerStartDateTimestamp = goal.start_date; // goal.start_date 是时间戳
-			if (goal.end_date) {
-				this.pickerEndDateTimestamp = goal.end_date; // goal.end_date 是时间戳
-			} else {
-				this.pickerEndDateTimestamp = null;
-			}
 			this.showGoalModal = true
 		},
 		
@@ -728,44 +730,22 @@ export default {
 		},
 		
 		// 日期选择确认
-		onStartDateConfirm(eventParams) {
-			console.log('onStartDateConfirm eventParams:', eventParams);
-			const timestamp = typeof eventParams === 'object' && eventParams !== null && eventParams.value !== undefined ? eventParams.value : eventParams;
-			console.log('Extracted timestamp for startDate:', timestamp);
-			if (timestamp === undefined || timestamp === null || isNaN(new Date(timestamp).getTime())) {
-				console.error('Invalid timestamp received for startDate:', timestamp);
-				this.showStartDatePicker = false;
-				uni.showToast({ title: '日期选择出错', icon: 'none' });
-				return;
-			}
-			this.goalForm.startDate = uni.$u.timeFormat(timestamp, 'yyyy-mm-dd');
-			this.pickerStartDateTimestamp = timestamp; // 同步v-model
-			this.showStartDatePicker = false;
-
+		onStartDateChange(e) {
+			const newStartDate = e.detail.value;
+			this.goalForm.startDate = newStartDate;
+		
 			// 如果已设置的结束日期早于新的开始日期，则清空结束日期
 			if (this.goalForm.endDate) {
-				const newStartDate = new Date(this.goalForm.startDate).getTime();
-				const currentEndDate = new Date(this.goalForm.endDate).getTime();
-				if (currentEndDate < newStartDate) {
+				const newStartDateMs = new Date(newStartDate).getTime();
+				const currentEndDateMs = new Date(this.goalForm.endDate).getTime();
+				if (currentEndDateMs <= newStartDateMs) {
 					this.goalForm.endDate = '';
-					this.pickerEndDateTimestamp = null; // 也清空结束日期选择器的v-model
 				}
 			}
 		},
 		
-		onEndDateConfirm(eventParams) {
-			console.log('onEndDateConfirm eventParams:', eventParams);
-			const timestamp = typeof eventParams === 'object' && eventParams !== null && eventParams.value !== undefined ? eventParams.value : eventParams;
-			console.log('Extracted timestamp for endDate:', timestamp);
-			 if (timestamp === undefined || timestamp === null || isNaN(new Date(timestamp).getTime())) {
-				console.error('Invalid timestamp received for endDate:', timestamp);
-				this.showEndDatePicker = false;
-				uni.showToast({ title: '日期选择出错', icon: 'none' });
-				return;
-			}
-			this.goalForm.endDate = uni.$u.timeFormat(timestamp, 'yyyy-mm-dd');
-			this.pickerEndDateTimestamp = timestamp; // 同步v-model
-			this.showEndDatePicker = false;
+		onEndDateChange(e) {
+			this.goalForm.endDate = e.detail.value;
 		},
 		
 		// 格式化日期范围
@@ -803,54 +783,8 @@ export default {
 				startDate: uni.$u.timeFormat(Date.now(), 'yyyy-mm-dd'),
 				endDate: ''
 			}
-			// 初始化picker的v-model值 和 minTimestampForEndDate
-			const now = new Date(this.goalForm.startDate);
-			this.pickerStartDateTimestamp = now.getTime();
-			this.pickerEndDateTimestamp = null; 
-			this.minTimestampForEndDate = now.getTime(); // 结束日期至少是开始日期当天
 		},
 
-		prepareStartDatePicker() {
-			if (this.goalForm.startDate) {
-				this.pickerStartDateTimestamp = new Date(this.goalForm.startDate).getTime();
-			} else {
-				// 一般在openGoalModal中已设置startDate，这里作为后备
-				const now = Date.now();
-				this.pickerStartDateTimestamp = now;
-				this.goalForm.startDate = uni.$u.timeFormat(now, 'yyyy-mm-dd');
-			}
-			this.showStartDatePicker = true;
-		},
-
-		prepareEndDatePicker() {
-			if (!this.goalForm.startDate) {
-				uni.showToast({ title: '请先选择开始日期', icon: 'none' });
-				return;
-			}
-			const startDateTimestamp = new Date(this.goalForm.startDate).getTime();
-			// 结束日期至少是开始日期的后一天
-			this.minTimestampForEndDate = startDateTimestamp + (24 * 60 * 60 * 1000); 
-
-			if (this.goalForm.endDate) {
-				// 如果表单中已有结束日期，以此为准
-				this.pickerEndDateTimestamp = new Date(this.goalForm.endDate).getTime();
-				// 确保不早于minDate
-				if (this.pickerEndDateTimestamp < this.minTimestampForEndDate) {
-				    this.pickerEndDateTimestamp = this.minTimestampForEndDate;
-				    this.goalForm.endDate = uni.$u.timeFormat(this.minTimestampForEndDate, 'yyyy-mm-dd'); // 如果调整了，也更新表单
-				}
-			} else {
-				// 否则，默认结束日期选择器显示开始日期的后一天
-				this.pickerEndDateTimestamp = this.minTimestampForEndDate; 
-				// this.goalForm.endDate = uni.$u.timeFormat(startDateTimestamp, 'yyyy-mm-dd'); // 可选：立即更新表单
-			}
-			// 再次确保 pickerEndDateTimestamp 不早于 minTimestampForEndDate (以防逻辑复杂性导致意外)
-			if (this.pickerEndDateTimestamp < this.minTimestampForEndDate) {
-				this.pickerEndDateTimestamp = this.minTimestampForEndDate;
-			}
-			this.showEndDatePicker = true;
-		},
-		
 		getGoalStatus(goal) {
 			if (goal.is_completed) {
 				return { text: '已完成', className: 'completed' };
@@ -1047,5 +981,24 @@ export default {
 
 .modal-content {
 	padding: 20rpx 0;
+}
+
+.picker-input-container {
+	border: 1px solid #e5e5e5;
+	border-radius: 8rpx;
+	height: 70rpx;
+	display: flex;
+	align-items: center;
+	padding: 0 20rpx;
+	font-size: 28rpx;
+	color: #303133;
+	
+	&.disabled {
+		background-color: #f5f7fa;
+	}
+}
+
+.picker-input-placeholder {
+	color: #909399;
 }
 </style> 

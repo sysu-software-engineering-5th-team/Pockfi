@@ -82,10 +82,19 @@
 			};
 		},
 		computed: {
-			// 支出 = 仅支出类型，不包括转账（转账只是资产间转移，不是真正的支出）
+			// 支出 = 支出类型 + 转账手续费
 			totalExpenditure() {
-				const expendBills = this.userBills.filter(bill => bill.bill_type === 0)
-				return expendBills.reduce((prev,next) => prev + next.bill_amount ,0).toFixed(2)
+				// 支出总额
+				const expendAmount = this.userBills
+					.filter(bill => bill.bill_type === 0)
+					.reduce((prev, next) => prev + next.bill_amount, 0);
+		
+				// 转账手续费总额
+				const transferFee = this.userBills
+					.filter(bill => bill.bill_type === 2)
+					.reduce((prev, next) => prev + next.bill_amount, 0);
+				
+				return (expendAmount + transferFee).toFixed(2);
 			},
 			// 收入
 			totalIncome() {

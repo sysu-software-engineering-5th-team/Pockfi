@@ -92,8 +92,8 @@
 				<view v-for="goal in savingGoals" :key="goal._id" class="goal-item">
 					<view class="goal-header">
 						<text class="goal-name">{{ goal.goal_name }}</text>
-						<text class="goal-status" :class="{ 'completed': goal.is_completed }">
-							{{ goal.is_completed ? '已完成' : '进行中' }}
+						<text class="goal-status" :class="getGoalStatus(goal).className">
+							{{ getGoalStatus(goal).text }}
 						</text>
 					</view>
 					
@@ -402,9 +402,6 @@ export default {
 			try {
 				let dateCondition = db.command.gte(goal.start_date);
 				if (goal.end_date) {
-					// 如果end_date是当天，则需要包含当天结束的时间点，例如 23:59:59.999
-					// 为简单起见，假设end_date存的是日期开始的时间戳，那么查询时需要 lte(goal.end_date + 24*60*60*1000 -1) 
-					// 或者，如果存的就是当天的23:59:59，则直接lte(goal.end_date)
 					// JQL中直接比较时间戳即可
 					dateCondition = dateCondition.and(db.command.lte(goal.end_date));
 				} else {
@@ -619,20 +616,23 @@ export default {
 			}
 			
 			// 校验结束日期不能早于开始日期
-			if (new Date(this.goalForm.endDate).getTime() < new Date(this.goalForm.startDate).getTime()) {
+			if (new Date(this.goalForm.endDate).getTime() <= new Date(this.goalForm.startDate).getTime()) {
 				uni.showToast({
-					title: '结束日期不能早于开始日期',
+					title: '结束日期至少要比开始日期晚一天',
 					icon: 'none'
 				});
 				return;
 			}
 			
 			try {
+				const endDate = new Date(this.goalForm.endDate);
+				endDate.setHours(23, 59, 59, 999); // 设置为当天的最后一毫秒
+				
 				const goalData = {
 					goal_name: this.goalForm.goalName,
 					target_amount: convertYuanToCent(Number(this.goalForm.targetAmount)),
 					start_date: new Date(this.goalForm.startDate).getTime(),
-					end_date: new Date(this.goalForm.endDate).getTime()
+					end_date: endDate.getTime()
 					// creation_date 和 update_date 会由数据库自动处理
 				}
 				
@@ -828,8 +828,8 @@ export default {
 				return;
 			}
 			const startDateTimestamp = new Date(this.goalForm.startDate).getTime();
-			// 结束日期至少是开始日期当天
-			this.minTimestampForEndDate = startDateTimestamp; 
+			// 结束日期至少是开始日期的后一天
+			this.minTimestampForEndDate = startDateTimestamp + (24 * 60 * 60 * 1000); 
 
 			if (this.goalForm.endDate) {
 				// 如果表单中已有结束日期，以此为准
@@ -840,9 +840,8 @@ export default {
 				    this.goalForm.endDate = uni.$u.timeFormat(this.minTimestampForEndDate, 'yyyy-mm-dd'); // 如果调整了，也更新表单
 				}
 			} else {
-				// 否则，默认结束日期选择器显示开始日期的后一天 (如果开始日期不是今天) 或当天 (如果开始日期是今天)
-				// 为了简单，可以直接设为与开始日期相同，让用户自己去调整为未来
-				this.pickerEndDateTimestamp = startDateTimestamp; 
+				// 否则，默认结束日期选择器显示开始日期的后一天
+				this.pickerEndDateTimestamp = this.minTimestampForEndDate; 
 				// this.goalForm.endDate = uni.$u.timeFormat(startDateTimestamp, 'yyyy-mm-dd'); // 可选：立即更新表单
 			}
 			// 再次确保 pickerEndDateTimestamp 不早于 minTimestampForEndDate (以防逻辑复杂性导致意外)
@@ -850,6 +849,20 @@ export default {
 				this.pickerEndDateTimestamp = this.minTimestampForEndDate;
 			}
 			this.showEndDatePicker = true;
+		},
+		
+		getGoalStatus(goal) {
+			if (goal.is_completed) {
+				return { text: '已完成', className: 'completed' };
+			}
+			
+			// 如果有结束日期且当前时间已超过结束日期，则为"未完成"
+			// goal.end_date 存储的是当天 23:59:59 的时间戳
+			if (goal.end_date && Date.now() > goal.end_date) {
+				return { text: '未完成', className: 'overdue' };
+			}
+			
+			return { text: '进行中', className: 'in-progress' };
 		}
 	}
 }
@@ -949,6 +962,16 @@ export default {
 				&.completed {
 					color: #67c23a;
 					background-color: #f0f9ff;
+				}
+				
+				&.overdue {
+					color: #909399; // 使用灰色表示未完成
+					background-color: #f4f4f5;
+				}
+				
+				&.in-progress {
+					color: #e6a23c;
+					background-color: #fdf6ec;
 				}
 			}
 		}

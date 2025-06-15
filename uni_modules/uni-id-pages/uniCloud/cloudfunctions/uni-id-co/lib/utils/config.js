@@ -81,8 +81,8 @@ class ConfigUtils {
     }
     
     const defaultConfig = {
-      tokenExpiresIn: 7200,
-      tokenExpiresThreshold: 1200,
+      tokenExpiresIn: 604800,
+      tokenExpiresThreshold: 259200,
       passwordErrorLimit: 6,
       passwordErrorRetryTime: 3600
     }

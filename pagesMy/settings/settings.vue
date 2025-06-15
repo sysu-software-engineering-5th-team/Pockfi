@@ -12,12 +12,16 @@
           <u-switch slot="right-icon" v-model="accListenerEnabled" @change="onAccListenerChange"></u-switch>
         </u-cell>
         
-        <u-cell title="开启通知监听权限" isLink @click="openNotificationPermission" v-if="notificationListenerEnabled">
+        <u-cell title="开启通知监听权限" isLink @click="openNotificationPermission">
           <uni-icons slot="icon" type="notification" size="48rpx" color="#888"></uni-icons>
         </u-cell>
         
-        <u-cell title="开启无障碍辅助功能" isLink @click="openAccessibilityService" v-if="accListenerEnabled">
+        <u-cell title="开启无障碍辅助功能" isLink @click="openAccessibilityService">
           <uni-icons slot="icon" type="settings" size="48rpx" color="#888"></uni-icons>
+        </u-cell>
+        
+        <u-cell title="应用权限设置" isLink @click="openAppSettings">
+          <uni-icons slot="icon" type="gear" size="48rpx" color="#888"></uni-icons>
         </u-cell>
         
         <!-- <u-cell title="加入电池优化白名单" isLink @click="openBatteryWhitelist">
@@ -65,6 +69,25 @@ export default {
       // 保存到本地存储
       uni.setStorageSync('notificationListenerEnabled', enabled);
       
+      // 互斥逻辑：如果开启通知监听，则关闭无障碍监听
+      if (enabled && this.accListenerEnabled) {
+        this.accListenerEnabled = false;
+        uni.setStorageSync('accListenerEnabled', false);
+        uni.$emit('accListenerSettingChanged', false);
+        uni.showModal({
+          title: '提示',
+          content: '无障碍监听功能已关闭。为了彻底禁用并防止应用自动跳转，建议您在系统设置中手动关闭本应用的无障碍服务。',
+          confirmText: '去设置',
+          cancelText: '知道了',
+          success: (res) => {
+            if (res.confirm) {
+              const nativePlug = uni.requireNativePlugin("MonitorPayinform");
+              nativePlug.openService();
+            }
+          }
+        });
+      }
+      
       // 通知App.vue更新状态
       uni.$emit('notificationListenerSettingChanged', enabled);
       
@@ -101,19 +124,31 @@ export default {
     },
     
     openAccessibilityService() {
-      const nativePlug = uni.requireNativePlugin("MonitorPayinform")
-      if (nativePlug.isStartAccService()) {
-        uni.showToast({
-          title: "无障碍服务已开启",
-          icon: 'none'
-        })
-      } else {
-		nativePlug.openService();
-        // uni.showToast({
-        //   title: "请在系统设置中开启无障碍服务",
-        //   icon: 'none'
-        // })
-      }
+      const nativePlug = uni.requireNativePlugin("MonitorPayinform");
+      nativePlug.openService();
+    },
+    
+    openAppSettings() {
+      // #ifdef APP-PLUS
+      const Intent = plus.android.importClass('android.content.Intent');
+      const Settings = plus.android.importClass('android.provider.Settings');
+      const Uri = plus.android.importClass('android.net.Uri');
+      
+      const mainActivity = plus.android.runtimeMainActivity();
+      const packageName = mainActivity.getPackageName();
+      
+      const intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+      intent.setData(Uri.parse('package:' + packageName));
+      
+      mainActivity.startActivity(intent);
+      // #endif
+      
+      // #ifndef APP-PLUS
+      uni.showToast({
+        title: '此功能仅在App端受支持',
+        icon: 'none'
+      });
+      // #endif
     }
   }
 }

@@ -339,9 +339,23 @@ export default {
 	  
 	  console.log('[Notification] 处理通知:', JSON.stringify(ret));
 	  
-	  // 提取金额逻辑保持不变
-	  const amountMatch = ret.text?.match(/([¥￥]|\b)(\d+\.?\d*)\s*(元|人民币|RMB)?/);
-	  const amount = amountMatch ? amountMatch[2] : null;
+	  // 提取金额逻辑
+	  let amount = null;
+	  if (ret.text) {
+		// 优先匹配带有货币符号或关键字的金额
+		// 关键字列表: 支付, 付款, 收款, 消费, 交易, 金额, 转账, 到账, 入账, 支出, 收入, 转入, 收到
+		let amountMatch = ret.text.match(/(?:[¥￥]|(?:支付|付款|收款|消费|交易|金额|转账|到账|入账|支出|收入|转入|收到)\s*[:：]?\s*)(\d+\.?\d*)/);
+		
+		// 如果没有匹配到，则尝试匹配数字后面带"元"的模式
+		if (!amountMatch) {
+		  amountMatch = ret.text.match(/(\d+\.?\d*)\s*元/);
+		}
+		
+		if (amountMatch) {
+		  // 无论是哪个正则匹配到的，金额都在第一个捕获组
+		  amount = amountMatch[1];
+		}
+	  }
 	  
 	  if (amount) {
 		  this.handleReceivedData(amount, ret);
@@ -352,6 +366,7 @@ export default {
       const paymentApps = [
         'com.tencent.mm', 
         'com.eg.android.AlipayGphone',
+		'com.alipay.mobile.client',
         'com.unionpay',
         'com.wuba'
       ];
@@ -362,6 +377,7 @@ export default {
       const appNames = {
         'com.tencent.mm': '微信',
         'com.eg.android.AlipayGphone': '支付宝',
+		'com.alipay.mobile.client': '支付宝',
         'com.unionpay': '云闪付',
         'com.wuba': '58同城',
         'com.tencent.mobileqq': 'QQ'
@@ -634,7 +650,11 @@ export default {
 			this.showPaymentConfirmDialog(amount, notification);
 			return;
 		}
-		
+		// 如果数据源是通知栏，则检查是否开启通知监听功能
+		if(!this.notificationListenerEnabled){
+			console.log('[Payment] 数据来自通知栏，但已经关闭通知监听功能');
+			return;
+		}
 		console.log('[Payment] 数据来自通知栏，继续进行关键词检查');
 		// 对来自通知栏的数据，继续进行关键词检查
 		const paymentKeywords = ['支付', '收款', '付款', '转账', '收钱', '付钱', '到账', '入账', '支出', '收入'];

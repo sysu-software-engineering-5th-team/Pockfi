@@ -235,6 +235,16 @@
 						},
 						{
 							validator: (rule, value, callback) => {
+								// 检查是否为负值
+								if (parseFloat(value) < 0) {
+									return false
+								}
+								return true
+							},
+							message: '手续费不能为负值'
+						},
+						{
+							validator: (rule, value, callback) => {
 								return uni.$u.test.amount(value)
 							},
 							message: '手续费格式有误，最多填写两位小数'
@@ -434,19 +444,22 @@
 						// console.log('this.editInitBill: ',this.editInitBill);
 						this.currentAssetTitle =  this.editInitBill.asset_id[0].asset_name || this.editInitBill.assetStyle?.title || '未选择资产'
 					} else {
-						// 如果为转账，获取转出账户的资产名
+						// 如果为转账，获取转出、转入账户的资产名
 						this.transferOutAssetStyle = {asset_name: this.editInitBill.asset_id[0].asset_name}
+						if (this.editInitBill.destination_asset_id && this.editInitBill.destination_asset_id[0]) {
+							this.transferIntoAssetStyle = {asset_name: this.editInitBill.destination_asset_id[0].asset_name};
+						}
 					}
 					// 清洗editInitBill的asset_id和destination_asset_id，使其从array => string
 					this.editInitBill.asset_id = this.editInitBill.asset_id[0]?._id ?? ''
 					this.editInitBill.destination_asset_id = this.editInitBill.destination_asset_id[0]?._id ?? ''
-					// 修改transfer_amount的单位
+					// 修改金额单位，从分转为元
 					this.editInitBill.transfer_amount ? this.editInitBill.transfer_amount /= 100 : ''
 					// console.log('editInitBill',this.editInitBill);
 					// 修改keyboard的数据
 					// 修改日期事件
 					this.userChooseDate = uni.$u.timeFormat(this.editInitBill.bill_date, 'mm月dd日')
-					// 修改备注
+					// 修改备注 (通用部分)
 					this.keyboardInfo.notes = this.editInitBill.bill_notes
 					if(tab != 2) {
 						// 如果是支出 和 收入 ，存入支出||收入表单信息
@@ -462,11 +475,26 @@
 					} else {
 						// 如果是转账，存入转账表单信息
 						this.transferAccountInfo = uni.$u.deepClone(this.editInitBill)
+						// 填充转账金额和手续费
 						this.keyboardInfo.balance = this.editInitBill.transfer_amount.toFixed(2)
-						// 修改转账信息，只拿到了转出的资产信息
+						this.transferInfo.serviceCharge = this.editInitBill.bill_amount.toFixed(2)
+						
+						// 分离用户自定义备注
+						const regex = /^([^-\n]+)/;
+						const match = regex.exec(this.editInitBill.bill_notes);
+						this.keyboardInfo.notes = match ? match[1].trim() : (this.editInitBill.bill_notes || '');
+						
+						// 填充转出账户的样式
 						this.transferOutAssetStyle = Object.assign(this.transferOutAssetStyle, this.editInitBill.assetStyle)
-						// 将表单中转入账户id清空
-						this.transferAccountInfo.destination_asset_id = ''
+						
+						// 修复：通过ID从本地资产列表查找并填充转入账户信息和样式，确保信息完整
+						const destinationAsset = this.userAssets.find(asset => asset._id === this.transferAccountInfo.destination_asset_id);
+						if (destinationAsset) {
+							this.transferIntoAssetStyle = {
+								...(destinationAsset.assetStyle || {}), 
+								asset_name: destinationAsset.asset_name || destinationAsset.assetStyle.title
+							};
+						}
 					}
 				}
 				if(type === 'template' || type === 'templateEdit') {
@@ -786,6 +814,8 @@
 						await this.getUserAssets()
 						uni.hideLoading() // 在跳转前隐藏loading
 						uni.showToast({ title: '账单已保存', icon: 'success', duration: 1500 });
+						// 再记时也检查预算
+						await this.checkBudgetAfterSave(this.transferAccountInfo.bill_amount, 2);
 						setTimeout(() => {
 							uni.navigateTo({
 								url:'/pagesAccount/make-an-account/make-an-account?from=addAgain&timestamp=' + Date.now()
@@ -805,11 +835,9 @@
 					// 弹出订阅消息
 					this.subDayNotification()
 					
-					// 检查预算提醒 (在显示 Toast 和导航之前)
-					// 转账也视为支出的一部分进行预算检查，金额为转账金额+手续费
-					const totalTransferExpense = this.transferAccountInfo.transfer_amount + this.transferAccountInfo.bill_amount;
-					await this.checkBudgetAfterSave(totalTransferExpense, 2); // bill_type 2 for transfer
-					
+					// 检查预算
+					await this.checkBudgetAfterSave(this.transferAccountInfo.bill_amount, 2);
+
 					// 确保所有新增账单操作后都通知提醒页面更新
 					uni.$emit('savingGoalsMightUpdate');
 
@@ -955,6 +983,14 @@
 						this.transferAccountInfo.bill_amount = convertYuanToCent(this.transferInfo.serviceCharge)
 						this.transferAccountInfo.bill_notes = this.keyboardInfo.notes
 						this.transferAccountInfo.transfer_amount = convertYuanToCent(this.keyboardInfo.balance)
+						
+						// 修复：更新时重新组合备注，以反映任何修改
+						const transferOutAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.asset_id)
+						const transferOutTitle = transferOutAsset?.asset_name || transferOutAsset?.assetStyle.title || '未知账户'
+						const transferInAsset = this.userAssets.find(item => item._id === this.transferAccountInfo.destination_asset_id)
+						const transferInTitle = transferInAsset?.asset_name || transferInAsset?.assetStyle.title || '未知账户'
+						this.transferAccountInfo.bill_notes = `${transferOutTitle}转出至${transferInTitle},手续费${parseFloat(this.transferInfo.serviceCharge).toFixed(2) || 0}元`
+						
 						await db.collection("mj-user-bills").doc(this.editInitBill._id).update({
 							asset_id: this.transferAccountInfo.asset_id,
 							bill_amount: this.transferAccountInfo.bill_amount, // 手续费
@@ -969,8 +1005,7 @@
 						await this.upDateUserTwoAssetBalance() // 更新涉及的两个新资产
 						
 						billTypeToCheck = 2;
-						amountToCheck = this.transferAccountInfo.transfer_amount + this.transferAccountInfo.bill_amount;
-						await this.checkBudgetAfterSave(amountToCheck, billTypeToCheck);
+						amountToCheck = this.transferAccountInfo.bill_amount; // 仅手续费计入预算
 					} else {
 						// 类型为支出 || 收入
 						const hasAsset = this.userAssets.find(item => item._id === this.expendOrIncomeInfo.asset_id) ?? 'none'
@@ -1010,7 +1045,7 @@
 					}
 					
 					// 统一在此处检查预算
-					if (billTypeToCheck === 0) { // 仅支出或转账类型检查
+					if (billTypeToCheck === 0 || billTypeToCheck === 2) { // 支出和转账手续费需要检查预算
 						await this.checkBudgetAfterSave(amountToCheck, billTypeToCheck);
 					}
 
@@ -1387,8 +1422,8 @@
 			// 保存账单后检查预算是否超限
 			async checkBudgetAfterSave(billAmount, billType) {
 				console.log('Checking budget after save:', billAmount, billType);
-				// billType 0:支出, 1:收入, 2:转账 (内部转账不计入支出总额)
-				if (billType === 1 || billType === 2) { // 收入和转账不参与预算超限判断
+				// billType 0:支出, 1:收入, 2:转账手续费. 收入不参与预算检查
+				if (billType === 1) { // 收入不参与预算超限判断
 					return;
 				}
 
@@ -1408,9 +1443,9 @@
 					const budgetAmount = budgetSettings.budget_amount; // 单位：分
 					const warningThreshold = budgetSettings.warning_threshold; // 百分比, e.g., 80
 
-					// 获取本月总支出 (包括刚刚保存的这笔)，只查询支出类型
+					// 获取本月总支出 (包括刚刚保存的这笔)，查询支出(0)和转账手续费(2)
 					const expenseRes = await db.collection("mj-user-bills")
-						.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && bill_type == 0`)
+						.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && bill_type in [0, 2]`)
 						.groupBy('user_id')
 						.groupField('sum(bill_amount) as total_expense')
 						.get();

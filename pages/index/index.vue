@@ -491,6 +491,9 @@
 					this.userBillsByDay = twoDimensionalArray.slice(0, this.needShowIndex + 1);
 					
 					console.log('账单列表数据处理完毕，userBillsByDay:', this.userBillsByDay);
+					
+					// 新增：检查内容是否满一屏，不满则自动加载
+					this.checkAndLoadMore();
 				} catch (error) {
 					console.error('获取月度账单数据失败:', error);
 					throw error; // 重新抛出错误，让调用者处理
@@ -552,35 +555,98 @@
 					title:"功能开发中~",
 					icon:"none"
 				})
-			}
+			},
+
+			// 添加loadData方法
+			async loadData() {
+				// 显示加载提示
+				uni.showLoading({
+					title: '数据加载中...',
+					mask: true
+				});
+				
+				try {
+					// 获取用户资产列表
+					await this.getUserAssets();
+					// 获取首页顶部轮播所需的本月支出和本月收入
+					await this.getUserMonthlyBillBalance();
+					// 获取月度账单列表
+					await this.getMonthBillsToDisplay();
+				} catch (error) {
+					console.error('首页数据加载失败:', error);
+					uni.showToast({
+						title: '数据加载失败',
+						icon: 'error'
+					});
+				} finally {
+					uni.hideLoading();
+				}
+			},
+
+			// 新增：检查内容是否满一屏，不满则自动加载更多
+			async checkAndLoadMore() {
+				this.$nextTick(() => {
+					// 如果所有天数的账单都已加载，则无需检查
+					if (this.needShowIndex >= this.userBillsOrderByDayArray.length - 1) {
+						return;
+					}
+					const query = uni.createSelectorQuery().in(this);
+					// .home 是整个页面的根容器
+					query.select('.home').boundingClientRect(data => {
+						if (!data) return; // 未找到元素则退出
+						const windowHeight = uni.getSystemInfoSync().windowHeight;
+						// 如果内容高度小于屏幕高度，说明没产生滚动条
+						if (data.height < windowHeight) {
+							console.log('内容不足一屏，自动加载更多...');
+							this.loadMoreBills(true); // 传入true表示是自动加载
+						}
+					}).exec();
+				});
+			},
+			
+			// 新增：从 onReachBottom 提取的通用加载逻辑
+			loadMoreBills(isAutoLoad = false) {
+				// isAutoLoad 用于区分是用户手动触底还是程序自动加载
+				
+				// 如果已经加载到最后一天，则停止
+				if (this.needShowIndex >= this.userBillsOrderByDayArray.length - 1) {
+					// 只有在用户手动上拉时才提示，避免初始自动加载时出现不必要的提示
+					if (!isAutoLoad) {
+						uni.showToast({ title: '没有更多账单了', icon: 'none' });
+					}
+					return;
+				}
+			
+				this.needShowIndex++;
+				let oneDayBillArray = this.userBillsOrderByDayArray[this.needShowIndex];
+				
+				// 可能存在某一天没有账单的情况，继续查找下一个有账单的日期
+				while(this.needShowIndex < this.userBillsOrderByDayArray.length - 1 && (!oneDayBillArray || oneDayBillArray.length === 0) ) {
+					this.needShowIndex++;
+					oneDayBillArray = this.userBillsOrderByDayArray[this.needShowIndex];
+				}
+			
+				if (oneDayBillArray && oneDayBillArray.length > 0) {
+					this.userBillsByDay.push(oneDayBillArray);
+					console.log("成功加载更多账单:", oneDayBillArray);
+					// 如果是自动加载触发的，加载完之后需要再次检查是否满一屏
+					if(isAutoLoad) {
+						this.checkAndLoadMore();
+					}
+				} else {
+					// 如果循环结束仍未找到有账单的数组，说明已经到底了
+					if (!isAutoLoad) {
+						uni.showToast({ title: '没有更多账单了', icon: 'none' });
+					}
+				}
+			},
 		},
 		// ---- 触底加载逻辑，从 bills.vue 迁移 ----
 		onReachBottom() {
 			// 只有在账单显示区域才执行触底加载
 			if (this.isIndexShow === 0) {
 				console.log("首页触底，尝试加载更多账单...");
-				if (this.needShowIndex >= this.userBillsOrderByDayArray.length - 1) {
-					console.log("所有账单已加载完毕");
-					uni.showToast({ title: '没有更多账单了', icon: 'none' });
-					return;
-				}
-
-				this.needShowIndex++;
-				let oneDayBillArray = this.userBillsOrderByDayArray[this.needShowIndex];
-				
-				// 可能存在某一天没有账单的情况，继续查找下一个有账单的日期
-				while(this.needShowIndex < this.userBillsOrderByDayArray.length -1 && (!oneDayBillArray || oneDayBillArray.length === 0) ) {
-					this.needShowIndex++;
-					oneDayBillArray = this.userBillsOrderByDayArray[this.needShowIndex];
-				}
-
-				if (oneDayBillArray && oneDayBillArray.length > 0) {
-					this.userBillsByDay.push(oneDayBillArray);
-					console.log("成功加载更多账单:", oneDayBillArray);
-				} else {
-					console.log("没有更多可加载的账单了（可能后续天数为空）");
-					// uni.showToast({ title: '没有更多账单了', icon: 'none' });
-				}
+				this.loadMoreBills();
 			}
 		},
 		onUnload(){

@@ -71,9 +71,9 @@
 								activeColor="#65915b"
 								inactiveColor="#f2f2f2"
 								blockColor="#65915b"
-								:min="50"
+								:min="0"
 								:max="100"
-								:step="10"
+								:step="5"
 								@change="updateBudgetSetting"
 							></u-slider>
 						</view>
@@ -339,9 +339,9 @@ export default {
 		async getMonthlyExpense() {
 			try {
 				const currentMonth = uni.$u.timeFormat(Date.now(), 'yyyy-mm')
-				// 只查询类型为0（支出）的账单
+				// 查询类型为0（支出）和2（转账手续费）的账单
 				const res = await db.collection("mj-user-bills")
-					.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && bill_type == 0`)
+					.where(`user_id == $cloudEnv_uid && dateToString(add(new Date(0),bill_date),"%Y-%m","+0800") == "${currentMonth}" && bill_type in [0, 2]`)
 					.groupBy('user_id') // 仍然需要一个groupBy来使用groupField
 					.groupField('sum(bill_amount) as total_expense')
 					.get()

@@ -1504,7 +1504,18 @@
 						return; // 没有进行中的存钱目标
 					}
 
-					const activeGoals = goalsRes.result.data;
+					// 过滤掉已过期的目标，过期的目标不应再增加进度
+					const activeGoals = goalsRes.result.data.filter(goal => {
+						if (goal.end_date && Date.now() > goal.end_date) {
+							return false; // 如果有截止日期且已过期，则过滤掉
+						}
+						return true; // 其他情况（无截止日期或未过期）保留
+					});
+
+					if (activeGoals.length === 0) {
+						return; // 没有未过期的进行中目标
+					}
+
 					let completedGoalNamesThisTime = [];
 
 					for (const goal of activeGoals) {

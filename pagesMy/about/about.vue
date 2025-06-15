@@ -35,7 +35,7 @@
 			<mj-card title="🎉1.1.0" subTitle="2025-06-14">
 				<view class="one-update">
 					<view class="row highlight">
-						⭐新增原生功能：无障碍服务，主动记录支付宝、微信支付页面，支付宝账单
+						⭐新增原生功能：无障碍服务，主动记录支付宝、微信支付页面
 					</view>
 					<view class="row highlight">
 						⭐新增原生功能：监听通知功能，主动记录通知栏消息，提取金额和关键词

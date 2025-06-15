@@ -38,6 +38,19 @@ export default {
 			// 如果关闭了功能，则停止相关服务
 			if (!enabled) {
 				this.stopAccListener();
+			} else {
+				console.log("[App] 无障碍监听功能已启用，开始初始化...");
+				if (nativePlug) {
+					const result = nativePlug.isStartAccService();
+					console.log("[App] isStartAccService 结果:", result);
+					if (result) {
+						nativePlug.initAcc();
+						console.log("[App] 无障碍服务已开启，重新注册事件监听器");
+						this.initAccListener(); // 每次都重新注册
+					} else {
+						console.log("[App] 无障碍服务未开启或初始化失败");
+					}
+				}
 			}
 		});
 		

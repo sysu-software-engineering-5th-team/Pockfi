@@ -32,7 +32,7 @@
 							<uni-easyinput type="number" v-model="formData.depositDays" placeholder="请输入实际存款天数" />
 						</uni-forms-item>
 						
-						<uni-forms-item label="利率计算方式" name="interestMethod">
+						<!-- <uni-forms-item label="利率计算方式" name="interestMethod">
 							<radio-group @change="radioChange($event, 'interestMethod')">
 								<label class="radio">
 									<radio value="auto" :checked="formData.interestMethod === 'auto'" />自动
@@ -41,7 +41,7 @@
 									<radio value="manual" :checked="formData.interestMethod === 'manual'" />手动
 								</label>
 							</radio-group>
-						</uni-forms-item>
+						</uni-forms-item> -->
 
 						<uni-forms-item label="年利率(%)" name="annualRate">
 							<uni-easyinput type="digit" v-model="formData.annualRate" placeholder="请输入年利率" :disabled="formData.interestMethod === 'auto'" />

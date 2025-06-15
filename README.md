@@ -1,31 +1,27 @@
 # README
 
-　　　　口袋智富 Pockfi
+　　口袋智富 Pockfi
 
-　　　　原始代码：
+#### 口袋智富是什么
 
-　　　　[ztkuaikuai/MiaoJi: 妙记✨记录你的生活。轻量记账小程序，在微信搜索妙记账单体验，使用uniapp与uniCloud进行开发。小程序毕设、毕业设计。](https://github.com/ztkuaikuai/MiaoJi)
+口袋智富是基于 Vue2 的 Uniapp 和 Unicloud 制作的轻量记账应用，有以下特色功能：
 
-### 部署参考：
+1. 智能记账：支持手动记录收入、支出账单，同时利用原生插件实现监听通知及支付页面，支持半自动记账；
+2. 理财分析：实现利息计算器、股票K线图表查看；
+3. 目标管理：月度预算设置，存钱目标追踪。
 
-　　　　妙记是基于 Vue2 的 Uniapp 和 Unicloud 制作的轻量记账应用。目前有微信小程序端和使用 uni-admin 搭建的后台管理 web 端。
 
-　　　　*你可以通过 DeepWiki 生成的*​*[项目文档](https://deepwiki.com/ztkuaikuai/MiaoJi)​*​*来详细了解该项目的结构和实现*。
-
-#### 演示
-
-![小程序二维码](https://webp.kuaikuaitz.top/小程序二维码.jpg)
 
 #### 快速启动⭐
 
 #### 前提条件
 
-1. 妙记通过 HBuilderX 进行开发，在微信开发者工具中预览效果。所以需要你先下载 [HBuilderX](https://hx.dcloud.net.cn/README) 和[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/devtools.html)。
-2. 妙记使用 UniCloud 作为云开发平台（可以理解为服务端），需要你在 [UniCloud 控制台](https://unicloud.dcloud.net.cn/)注册登录并创建服务空间，免费的就行，以便后续开发使用。
+1. 口袋智富通过 HBuilderX 进行开发，在模拟器或真机上进行调试。所以需要你先下载 [HBuilderX](https://hx.dcloud.net.cn/README) 。
+2. 口袋智富使用 UniCloud 作为云开发平台（可以理解为服务端），需要你在 [UniCloud 控制台](https://unicloud.dcloud.net.cn/)注册登录并创建服务空间，免费的就行，以便后续开发使用。
 
 #### 拷贝项目
 
-　　　　fork 项目到你的仓库拷贝或者直接通过 `git clone`​ 命令拷贝[妙记](https://github.com/ztkuaikuai/MiaoJi)到本地，通过 HBuilderX 打开该项目。
+　　　　fork 项目到你的仓库拷贝或者直接通过 `git clone` 命令拷贝[sysu-software-engineering-5th-team/Pockfi: 口袋智富（PockFi）——财富管理软件，使用uniapp和uniCloud进行开发。](https://github.com/sysu-software-engineering-5th-team/Pockfi)到本地，通过 HBuilderX 打开该项目。
 
 #### 初始化项目
 
@@ -61,9 +57,9 @@
 
    > 如果中途有弹窗，云函数点击「替换」，云数据库勾选「全部创建」后点「是」。
 
-4. 在 `manifest.json`​ 中更新你的配置。微信小程序配置，将 appid 替换成你自己小程序的 appid ；基础配置，将「uni-app 应用标识」重新获取，利用查找替换将项目中带有 `__UNI__EE89725`​ 的替换成你自己的。
+4. 在 `manifest.json` 中更新你的配置。基础配置，将「uni-app 应用标识」重新获取，利用查找替换将项目中带有 `__UNI__DE62703` 的替换成你自己的；利用static目录中的logo图片生成应用图标。
 
-5. 打包自定义基座：运行 -> 运行到手机或模拟器 -> 制作自定义调试基座，选择使用自有证书，内容如下：
+5. 打包**自定义基座**：运行 -> 运行到手机或模拟器 -> 制作自定义调试基座，选择使用自有证书，内容如下：
 
    - 证书文件：项目.keystore文件
 
@@ -75,9 +71,9 @@
 
      请查看 “我的” - “自动记账须知”中的相关说明。 开发者注意：
 
-   - 目前uniapp控制台会报错：[JS Framework] Failed to execute the callback function:TypeError: Cannot read property 'checkServiceStatus' of undefined，这是原生插件调用信息，完全不会影响软件运行
+   - 目前uniapp控制台会报错：[JS Framework] Failed to execute the callback function:TypeError: Cannot read property 'checkServiceStatus' of undefined，这是原生插件检查的信息，完全不会影响软件运行
 
-   - uniapp打包时未添加oauth模块，调试时打开应用会有这个提示，打包使用原生插件的app会有该提示，后续改进，目前点击“忽略”即可。
+   - uniapp打包时未添加oauth模块，调试时打开应用会有这个提示，打包使用原生插件的app会有该提示，后续改进，若出现点击“忽略”即可。
 
 6. 配置小程序合法域名，请[参考文档](https://doc.dcloud.net.cn/uniCloud/publish.html#useinmp)
 
@@ -89,49 +85,50 @@
 
 1. 下载市面上任意手机模拟器、如mumu等，安装后启动模拟器
 2. 启动HbuilderX，打开项目
-3. HbuilderX工具栏——运行——运行到手机或模拟器——运行到Android-App基座
-4. 在页面选取模拟器设备，使用标准基座运行，等待编译运行即可
+3. HbuilderX工具栏——运行——运行到手机或模拟器——制作自定义基座
+4. HbuilderX工具栏——运行——运行到手机或模拟器——运行到Android-App基座
+5. 在页面选取模拟器设备，选择自定义基座运行，等待编译运行即可
 
 ##### 方法2：使用真机
 
 1. 在手机找到开发人员选项（不同手机该选项打开方式不同，比如华为要在关于手机——连续点击鸿蒙版本号框7次才能打开该选项）——勾选USB调试
 2. 将电脑USB接口连接至手机，信任设备并进入调试模式（最好使用手机原装数据线、否则可能检测不到）
 3. 启动HbuilderX，打开项目
-4. HbuilderX工具栏——运行——运行到手机或模拟器——运行到Android-App基座
-5. 在页面选取手机设备，使用标准基座运行，等待编译运行即可
+4. HbuilderX工具栏——运行——运行到手机或模拟器——制作自定义基座
+5. HbuilderX工具栏——运行——运行到手机或模拟器——运行到Android-App基座
+6. 在页面选取手机设备，选择自定义基座运行，等待编译运行即可
+7. 可直接打包为正式包发到手机上安装运行，方法基本同打包自定义基座，但选择打”正式包“。
 
-#### 项目结构
 
-```js
-uniCloud/               // 使用阿里云的云空间
-  |-cloudfunctions/     // 存放云函数、云对象
-  |-database/           // 存放数据库表结构，参考文档：https://siu9p6v1zlb.feishu.cn/docx/WvmfdEmzsoBCIhxUpN6cAw8Nn7b?from=from_copylink
-.hbuilderx
-components/             // 存放妙记的组件
-pages/                  // 存放主要模块，即tabbar的4个页面，其余页面分包处理
-pagesAccount/           // 记账模块
-pagesFilter/            // 未开发完，筛选模块
-pagesMy/                // 我的模块
-static/                 // 静态资源，存放icon、图片等
-uni_modules/            // 存放在插件市场下载的包
-unpackage/
-utils/                  // 存放可复用的工具函数
-.gitignore
-App.vue
-CHANGELOG.md
-index.html
-LICENSE
-main.js
-manifest.json           // 应用的配置文件
-pages.json              // 项目页面配置，相当于微信小程序当中的 app.json
-README.md
-uni.promisify.adaptor.js
-uni.scss                // 全局的样式文件
+
+#### 项目主要结构
+
+```
+Pockfi/
+├── components/              # 存放全局可复用的 Vue 组件，如自定义的卡片、弹窗等。
+├── nativeplugins/           # 存放原生插件（Android），用于实现原生功能。
+├── pages/                   # 主包页面目录，存放应用的核心页面，如首页、报表、理财、提醒、我的。
+├── pagesAccount/            # 账户相关页面分包，如新建账单、设置资产等。
+├── pagesMy/                 # “我的”页面中各项功能的分包，如预算、定时记账、关于等。
+├── static/                  # 静态资源目录，编译后会直接保留，通常存放图标、图片等。
+├── uni_modules/             # uni-app 生态的插件模块，项目依赖的第三方组件库（如uView UI）都在这里。
+├── uniCloud-aliyun/         # uniCloud 阿里云服务空间，存放所有服务端代码。
+│   ├── cloudfunctions/      # 云函数目录，存放应用的后端逻辑。
+│   └── database/            # 数据库 Schema 目录，定义数据表结构。
+├── utils/                   # 工具函数库，存放一些通用的JS工具函数。
+├── App.vue                  # 应用根组件，可以设置全局样式和监听应用生命周期。
+├── main.js                  # Vue 初始化入口文件，在这里引入并挂载全局组件和库。
+├── manifest.json            # 应用配置文件，配置App的名称、图标、权限、SDK等。
+└── pages.json               # 页面路由和窗口表现配置文件，所有页面都需要在这里注册。
 ```
 
 　　　　‍
 
-　　　　‍
+#### 　　　　‍开源致谢
+
+口袋智富基于开源项目妙记[ztkuaikuai/MiaoJi: 妙记✨记录你的生活。轻量记账小程序，在微信搜索妙记账单体验，使用uniapp与uniCloud进行开发。小程序毕设、毕业设计。](https://github.com/ztkuaikuai/MiaoJi)进行二次开发，感谢原作者的开源贡献。
+
+
 
 ### 待办清单：
 
@@ -272,22 +269,28 @@ uni.scss                // 全局的样式文件
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已分配
           时间: 2025-05-30</div></div>
-
-
-      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决 时间: 2025-06-02</div></div>
+      
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
+          时间: 2025-06-01</div></div>
 
   - 边界测试：
 
     - [x] 记账——点我记账——保存——超长金额：客户端正确提示输入“金额长度不能超过8位”
 
-    - [ ] 记账——点我记账——保存——0金额：正确不进行记账，但是客户端没有提示
+    - [x] 记账——点我记账——保存——0金额：正确不进行记账，但是客户端没有提示
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-06-09</div></div>
 
-    - [ ] 记账——点我记账——保存——转账——负数手续费：正确不进行记账，但是客户端提示为小数位数错误
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
+          时间: 2025-06-15</div></div>
+
+    - [x] 记账——点我记账——保存——转账——负数手续费：正确不进行记账，但是客户端提示为小数位数错误
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-06-09</div></div>
 
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
+          时间: 2025-06-14</div></div>
+      
       
 
   - 改进建议(可选)：
@@ -297,10 +300,11 @@ uni.scss                // 全局的样式文件
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已分配
           时间: 2025-05-30</div></div>
 
-
-      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决 时间: 2025-06-02</div></div>
+<div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
+    时间: 2025-06-01</div></div>
 
   
+
 
 
 - [x] 编辑账目记录
@@ -318,28 +322,29 @@ uni.scss                // 全局的样式文件
 
     - [x] 记账——左滑账单——修改——超长金额：客户端正确提示输入“金额长度不能超过8位”
 
-    - [ ] 记账——点我记账——保存——0金额：正确不进行记账，但是客户端没有提示
+    - [x] 记账——点我记账——保存——0金额：正确不进行记账，但是客户端没有提示
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-06-09</div></div>
+      
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
+          时间: 2025-06-15</div></div>
 
   - 改进建议(可选)：
 
     - [x] 记账——左滑账单——修改：成功保存客户端不给出提示，可以考虑加上提示
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已修复
-          时间: 2025-05-28</div></div>
+          时间: 2025-05-28</div></div>  
 
-
-      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决 时间: 2025-06-02</div></div>
-
-  
 
 
 - [ ] 手动编辑消费类型
 
   
 
-- [ ] 半**自动记录**消费
+- [x] 半**自动记录**消费
+
+  <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-06-14</div></div>
 
   
 
@@ -347,9 +352,9 @@ uni.scss                // 全局的样式文件
 
   
 
-- [ ] 实时对照消费预算
+- [x] 实时对照消费预算
 
-  
+  <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-06-01</div></div>
 
 - [x] 资产模块（添加/删除/与消费记录绑定）
 
@@ -410,14 +415,20 @@ uni.scss                // 全局的样式文件
 
   - 边界测试：
 
-    - [ ] 资产——添加资产——负数金额：正确不进行添加，但允许负资产或许也合理？且报错信息为小数错误
+    - [x] 资产——添加资产——负数金额：正确不进行添加，但允许负资产或许也合理？且报错信息为小数错误
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-06-09</div></div>
 
-    - [ ] 资产——左滑资产——修改——负数金额：正确不进行修改，但允许负资产或许也合理？且报错信息为小数错误
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
+          时间: 2025-06-14</div></div>
+
+    - [x] 资产——左滑资产——修改——负数金额：正确不进行修改，但允许负资产或许也合理？且报错信息为小数错误
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-06-09</div></div>
 
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决
+          时间: 2025-06-14</div></div>
+      
       
 
 - [x] 同名资产合并
@@ -484,11 +495,16 @@ uni.scss                // 全局的样式文件
 
   - 边界测试：
 
-    - [ ] 超长金额、超长存款天数、超长年利率：正确输入金额、存款天数、年利率，并计算得到预期收益，客户端并没有给出限制？
+    - [x] 超长金额、超长存款天数、超长年利率：正确输入金额、存款天数、年利率，并计算得到预期收益，客户端并没有给出限制？
 
       <div>
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-05-29</div></div>
 
+      <div>
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决: 2025-06-15</div></div>
+    
+      
+    
     - [x] 0或负数金额、0或负数存款天数、0或负数年利率：正确输入金额、存款天数、年利率，客户端正确提示输入错误
 
   
@@ -536,14 +552,17 @@ uni.scss                // 全局的样式文件
 
     - [x] 设置预算——超长金额：客户端正确提示预算数字无效
 
-    - [ ] 设置预算+内部转账：内部转账被错误计算到预算使用，感觉不太符合使用常理？
+    - [x] 设置预算+内部转账：内部转账被错误计算到预算使用，感觉不太符合使用常理？
 
       - 修改建议：预算使用和首页的当月支出绑定，这部分计算应该较为正确
 
       <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">发现时间: 2025-06-09</div></div>
 
+      <div>
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">已解决: 2025-06-15</div></div>
+    
     - [x] 设置预算+收入：收入没被计算到抵扣预算使用，感觉符合使用常理？
-
+    
       
 
 - [x] 财务目标设定
@@ -697,9 +716,10 @@ uni.scss                // 全局的样式文件
 
     - [ ] 其他注册方式
 
-    - [ ] 超长密码：客户端正确限制超额输入，同时给出提示
+    - [x] 超长密码：客户端正确限制超额输入，同时给出提示
 
-      
+      <div>
+      <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="true" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-06-01</div></div>
 
 - [ ] 忘记密码（已有页面模板但未实现验证手机号码）
 

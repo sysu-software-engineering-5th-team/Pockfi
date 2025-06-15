@@ -294,29 +294,56 @@
 				}
 			},
 			calculateInterest() {
-				// 输入校验
-				if (!this.formData.depositAmount || parseFloat(this.formData.depositAmount) <= 0) {
+				const { depositAmount, depositType, depositDays, interestMethod, annualRate } = this.formData;
+				
+				// --- 输入校验 ---
+				
+				// 1. 存款金额
+				if (!depositAmount || parseFloat(depositAmount) <= 0) {
 					uni.showToast({ title: '请输入有效的存款金额', icon: 'none' });
 					return;
 				}
-				if (this.formData.interestMethod === 'manual' && (!this.formData.annualRate || parseFloat(this.formData.annualRate) <= 0)) {
-					uni.showToast({ title: '手动模式下，请输入有效的年利率', icon: 'none' });
-					return;
-				}
-				if (this.formData.depositType === 'current' && (!this.formData.depositDays || parseInt(this.formData.depositDays) <= 0)) {
-					uni.showToast({ title: '活期存款请输入有效的存款天数', icon: 'none' });
+				if (String(depositAmount).length > 12) {
+					uni.showToast({ title: '存款金额超出限制(最多12位)', icon: 'none' });
 					return;
 				}
 				
-				let principal = parseFloat(this.formData.depositAmount);
-				let annualRateDecimal = parseFloat(this.formData.annualRate) / 100;
+				// 2. 年利率 (手动模式下)
+				if (interestMethod === 'manual') {
+					if (!annualRate || parseFloat(annualRate) <= 0) {
+						uni.showToast({ title: '手动模式下，请输入有效的年利率', icon: 'none' });
+						return;
+					}
+					// 限制年利率, 例如 "9999.99" (7位)
+					if (String(annualRate).length > 7) {
+						uni.showToast({ title: '年利率数值或精度超出限制', icon: 'none' });
+						return;
+					}
+				}
+				
+				// 3. 存款天数 (活期模式下)
+				if (depositType === 'current') {
+					if (!depositDays || parseInt(depositDays) <= 0) {
+						uni.showToast({ title: '活期存款请输入有效的存款天数', icon: 'none' });
+						return;
+					}
+					if (String(depositDays).length > 5) { // 99999天约等于273年
+						uni.showToast({ title: '存款天数超出限制(最多5位)', icon: 'none' });
+						return;
+					}
+				}
+				
+				// --- 计算逻辑 ---
+				
+				let principal = parseFloat(depositAmount);
+				let annualRateDecimal = parseFloat(annualRate) / 100;
 				let earnings = 0;
 
-				if (this.formData.depositType === 'current') {
+				if (depositType === 'current') {
 					// 活期利息计算: 本金 * (年利率 / 360) * 存款天数 (通常银行按360天计息)
-					let days = parseInt(this.formData.depositDays);
+					let days = parseInt(depositDays);
 					earnings = principal * (annualRateDecimal / 360) * days;
-				} else if (this.formData.depositType === 'fixed') {
+				} else if (depositType === 'fixed') {
 					// 定期利息计算: 本金 * 年利率 * 存款年限
 					// this.formData.term 已经是年为单位 (如0.25, 1, 2)
 					earnings = principal * annualRateDecimal * this.formData.term;

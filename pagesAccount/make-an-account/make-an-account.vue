@@ -657,7 +657,14 @@
 			},
 			// 用户点击保存按钮触发  判断类型，并触发相应逻辑
 			async tapSaveBtn() {
-				if(!uni.$u.test.amount(this.keyboardInfo.balance)) return
+				// 在所有保存操作之前，先统一校验金额是否为空
+				if (!this.keyboardInfo.balance) {
+					uni.showToast({
+						title: this.showTransferAccounts ? "请填写转账金额" : "请填写金额",
+						icon: "none"
+					});
+					return;
+				}
 				// 在实际的保存操作前显示 Loading
 				// 注意：具体的 hideLoading 和 showToast 应该在各自的 addOneBill, addOneTransfer 等方法中处理
 				// 因为 tapSaveBtn 只是一个分发器
@@ -687,7 +694,7 @@
 				// 金额不能为0
 				if(Number(this.keyboardInfo.balance) === 0) {
 					uni.showToast({
-						title:"请填写金额",
+						title:"金额为0，无法保存",
 						icon:"none"
 					})
 					return
@@ -873,7 +880,7 @@
 				}
 				if(Number(this.keyboardInfo.balance) === 0) {
 					uni.showToast({
-						title:"请填写转账金额",
+						title:"转账金额为0，无法保存",
 						icon:"none"
 					})
 					return false
@@ -996,7 +1003,7 @@
 						if(Number(this.keyboardInfo.balance) === 0) {
 							uni.hideLoading();
 							uni.showToast({
-								title:"请填写金额",
+								title:"金额为0，无法保存",
 								icon:"none"
 							})
 							return;
@@ -1126,7 +1133,7 @@
 					if(!this.showTransferAccounts) {
 						// ... (省略验证逻辑 - 假设它们会 showToast 并 return) ...
 						if(Number(this.keyboardInfo.balance) === 0) {
-							uni.showToast({ title:"请填写金额", icon:"none" });
+							uni.showToast({ title:"金额为0，无法保存", icon:"none" });
 							uni.hideLoading(); return;
 						}
 						if(!this.expendOrIncomeInfo.asset_id) {

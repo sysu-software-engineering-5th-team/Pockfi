@@ -862,9 +862,21 @@ Pockfi/
 
   <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="false" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-05-30</div></div>
 
+  - 标准测试：
+
+    - [x] 封禁用户：正确封禁用户，客户端提示用户已经被封禁
+
+    - [x] 解封用户：正确解封用户，客户端正常登录
+
 - [ ] **编辑帮助文档**
 
-- [ ] **数据看板**
+- [x] **数据看板**
+  
+  <div class="siyuan-plugin-task-date-info-wrapper" contenteditable="false" data-type="siyuan-plugin-custom-wrapper" style="position: absolute; top: 0px; right: 0px; left: 0px; pointer-events: none !important;"><div class="siyuan-plugin-task-date-info" contenteditable="false" data-editable="false" spellcheck="false" data-type="siyuan-plugin-custom-date-info" style="position: absolute; font-size: 10px; color: rgb(136, 136, 136); text-align: right; right: 20px; top: -12px; pointer-events: none !important; user-select: none !important;">完成时间: 2025-06-17</div></div>
+  
+  - 标准测试：
+
+    - [x] 数据看板：正确进入数据看板，管理员客户端正确显示各种数据
 
 ### 测试截图
 

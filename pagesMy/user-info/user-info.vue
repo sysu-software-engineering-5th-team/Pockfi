@@ -216,7 +216,7 @@
 				const res = await db.collection("uni-id-users").where("_id == $cloudEnv_uid").field("_id,nickname,avatar,register_date").get()
 				let {avatar: dbAvatarSrc, nickname: dbNickname, register_date: dbRegisterDate} = res.result.data[0]
 				
-				const userLabel = Math.round(dbRegisterDate * 3 / 200000).toString()
+				const userLabel = Math.round(dbRegisterDate * 3 / 200000).toString().padStart(8, '0')
 				this.registerDateForTitle = uni.$u.timeFormat(dbRegisterDate,'yyyy年mm月')
 				const formattedRegisterDate = uni.$u.timeFormat(dbRegisterDate,'yyyy-mm-dd')
 				
@@ -232,7 +232,8 @@
 				// 如果数据库数据与当前UI（可能来自旧缓存）不同，则更新UI
 				if (this.userInfo.avatarSrc !== dbUserInfo.avatarSrc || 
 					this.userInfo.nickname !== dbUserInfo.nickname ||
-					this.userInfo.registerDate !== dbUserInfo.registerDate) {
+					this.userInfo.registerDate !== dbUserInfo.registerDate ||
+					this.userInfo.userLabel !== dbUserInfo.userLabel) {
 					Object.assign(this.userInfo, dbUserInfo);
 				}
 				

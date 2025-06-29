@@ -49,18 +49,18 @@
 				
 				<!-- 微信登录 -->
 				<!-- #if MP-WEIXIN || APP-PLUS -->
-				<view @click="loginByWeixin" class="login-type-item">
+				<!-- <view @click="loginByWeixin" class="login-type-item">
 					<u-icon name="weixin-fill" size="20" color="#52b838"></u-icon>
 					<text class="login-type-text">微信登录</text>
-				</view>
+				</view> -->
 				<!-- #endif -->
 
 				<!-- 一键登录 -->
 				<!-- #ifdef APP-PLUS -->
-				<view @click="loginByUniverify" class="login-type-item">
-					<u-icon name="fingerprint" size="20" color="#999"></u-icon> <!-- 使用 fingerprint 作为示意图标 -->
+				<!-- <view @click="loginByUniverify" class="login-type-item"> -->
+					<!-- <u-icon name="fingerprint" size="20" color="#999"></u-icon>
 					<text class="login-type-text">一键登录</text>
-				</view>
+				</view> -->
 				<!-- #endif -->
 			</view>
 		</div>

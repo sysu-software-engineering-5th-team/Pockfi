@@ -114,7 +114,8 @@
 					</view>
 
 					<view v-if="!isLoadingKlineData && (!klineDataArray || klineDataArray.length === 0) && !klineApiError && current === 1" class="empty-state">
-						<text>请输入API Token、股票代码并选择K线周期后点击"查询K线"按钮获取数据。</text>
+						<text>请输入API Token、股票代码并选择K线周期后点击"查询K线"按钮获取数据。<br></text>
+						<text @click="openItickWebsite" class="link-style">跳转到itick官网</text>
 					</view>
 				</view>
 			</uni-section>
@@ -349,8 +350,12 @@
 				uni.showToast({ title: '已重置', icon: 'none' });
 			},
 
+			openItickWebsite() {
+				plus.runtime.openWeb('https://www.itick.org/');
+			},
+
 			async fetchKlineData() {
-				const defaultToken = '8deef432e4ff4c2f95b0f28085b0204fd8155c8fc51d4f9e9cf9f882e6fa2bcd';
+				const defaultToken = '247542a87deb46c4825b73e92fd10aaeb309719703344372bf3c07c95784c1f7';
 				const tokenToUse = this.iTickApiToken || defaultToken;
 
 				if (!this.stockSymbolInput) {
@@ -561,7 +566,7 @@
 		},
 		mounted() {
 			// 页面加载时，尝试从本地存储中读取API Token，如果为空则使用一个默认的
-			this.iTickApiToken = uni.getStorageSync('iTickApiToken') || '8deef432e4ff4c2f95b0f28085b0204fd8155c8fc51d4f9e9cf9f882e6fa2bcd';
+			this.iTickApiToken = uni.getStorageSync('iTickApiToken') || '247542a87deb46c4825b73e92fd10aaeb309719703344372bf3c07c95784c1f7';
 			
 			// 初始化时，确保 formData.term 基于 termIndex (如果初始是定期)
 			if(this.formData.depositType === 'fixed'){
@@ -703,6 +708,18 @@
 		padding: 20px;
 		text-align: center;
 		color: #888;
+		padding: 20px;
+		line-height: 1.6;
+	}
+
+	.link-style {
+		color: #007bff;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	.data-source-tip {
+		text-align: right;
 	}
 
 	// 移除 webview 相关样式 (如果不再需要)

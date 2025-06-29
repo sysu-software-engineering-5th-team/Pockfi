@@ -140,10 +140,11 @@
 						disableGrid: true
 					},
 					xAxis: {
-						itemCount: 20,
+						itemCount: 10,
 						labelCount: 5,
 						fontSize: 10,
-						min: 0
+						min: 0,
+						scrollAlign: 'right'
 					},
 					legend: {
 						margin: 0
@@ -379,7 +380,7 @@
 					const dayCount = this.getTotalDaysInMonth(this.month);
 					for (let i = 0; i < dayCount; i++) {
 						let day = dayCount - i;
-						result.categories.push(`${this.month.slice(-2)}月${day}日`);
+						result.categories.push(`${this.month.slice(-2)}.${day}`);
 						result.series[0].data.push(0);
 						result.series[1].data.push(0);
 					}
@@ -411,7 +412,7 @@
 						  dayIncome += bill.bill_amount;
 						}
 					}
-					result.categories.push(`${chartMonth}月${currentDayNumber - i}日`); 
+					result.categories.push(`${chartMonth}.${currentDayNumber - i}`); 
 					result.series[0].data.push(parseFloat(dayExpense.toFixed(2)));
 					result.series[1].data.push(parseFloat(dayIncome.toFixed(2)));
 				}

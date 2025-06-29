@@ -36,48 +36,43 @@
 					</view>
 				</u-grid-item>
 			</u-grid>
-			<!-- 偏好 -->
-			<uni-section class="section" title="偏好" type="line" titleFontSize="32rpx"
-				titleColor="#212121"></uni-section>
-			<u-grid :border="false" @click="clickLike" col="4">
-				<u-grid-item v-for="item,index in likeList" :key="index" >
-					<view class="content">
-						<view class="grid-item">
-							<uni-icons :type="item.icon" size="48rpx" :customPrefix="item.customPrefix"></uni-icons>
-							<view class="grid-text">{{item.title}}</view>
-						</view>
-					</view>
-				</u-grid-item>
-			</u-grid>
 
 			<!-- 其他 -->
-			<uni-section class="section" title="其他" type="line" titleFontSize="32rpx"
-				titleColor="#212121"></uni-section>
-			<u-cell-group :border="false">
-				<u-cell :isLink="true" @click="clickAbout">
-					<view slot="title" class="about">
-						<view>
-							关于口袋智富
+			<view class="other-part">
+				<uni-section class="section" title="其他" type="line" titleFontSize="32rpx"
+					titleColor="#212121"></uni-section>
+				<u-cell-group :border="false">
+					<u-cell title="设置" :isLink="true" @click="goSetting">
+						<uni-icons slot="icon" type="gear" size="36rpx"></uni-icons>
+					</u-cell>
+					<u-cell title="自动记账须知" :isLink="true" @click="Knowing">
+						<uni-icons slot="icon" type="chat" size="36rpx"></uni-icons>
+					</u-cell>
+					<u-cell :isLink="true" @click="clickAbout">
+						<view slot="title" class="about">
+							<view>
+								关于口袋智富
+							</view>
+							<view class="about-tag">
+								<u-tag text="🎉v1.1.0" size="mini" @click="clickAbout"></u-tag>
+							</view>
 						</view>
-						<view class="about-tag">
-							<u-tag text="🎉v1.1.0" size="mini" @click="clickAbout"></u-tag>
-						</view>
-					</view>
-					<uni-icons slot="icon" type="info" size="36rpx"></uni-icons>
-				</u-cell>
-				<u-cell title="反馈问题" :isLink="true" @click="clickFeedback">
-					<uni-icons slot="icon" type="compose" size="36rpx"></uni-icons>
-				</u-cell>
-				<u-cell title="项目成员" :isLink="true" @click="clickAuthor">
-					<uni-icons slot="icon" type="personadd" size="36rpx"></uni-icons>
-				</u-cell>
-				<u-cell title="退出登录" :isLink="true" @click="logout">
-					<uni-icons slot="icon" type="mj-logout" size="32rpx" customPrefix="miaoji"></uni-icons>
-				</u-cell>
-				<!-- <u-cell title="注销账号" :isLink="true" @click="deactivate">
-					<uni-icons slot="icon" type="mj-stop" size="32rpx" customPrefix="miaoji"></uni-icons>
-				</u-cell> -->
-			</u-cell-group>
+						<uni-icons slot="icon" type="info" size="36rpx"></uni-icons>
+					</u-cell>
+					<u-cell title="反馈问题" :isLink="true" @click="clickFeedback">
+						<uni-icons slot="icon" type="compose" size="36rpx"></uni-icons>
+					</u-cell>
+					<u-cell title="项目成员" :isLink="true" @click="clickAuthor">
+						<uni-icons slot="icon" type="personadd" size="36rpx"></uni-icons>
+					</u-cell>
+					<u-cell title="退出登录" :isLink="true" @click="logout">
+						<uni-icons slot="icon" type="mj-logout" size="32rpx" customPrefix="miaoji"></uni-icons>
+					</u-cell>
+					<!-- <u-cell title="注销账号" :isLink="true" @click="deactivate">
+						<uni-icons slot="icon" type="mj-stop" size="32rpx" customPrefix="miaoji"></uni-icons>
+					</u-cell> -->
+				</u-cell-group>
+			</view>
 		</view>
 	</view>
 </template>
@@ -114,13 +109,6 @@
 					{
 						icon: 'mj-reloadtime',
 						title: '定时记账',
-						customPrefix: "miaoji"
-					}
-				],
-				likeList: [
-					{
-						icon: 'mj-individuation',
-						title: '个性化',
 						customPrefix: "miaoji"
 					}
 				],
@@ -184,15 +172,6 @@
 						})
 				}
 			},
-			clickLike(index) {
-				switch (index) {
-					default:
-						uni.showToast({
-							title:"正在开发中~",
-							icon: "none"
-						})
-				}
-			},
 			clickFeedback() {
 				uni.navigateTo({
 					url: "/pagesMy/feedback/feedback"
@@ -201,7 +180,7 @@
 			clickAuthor() {
 				uni.showModal({
 					title: "中山大学计算机学院 22级软件工程大作业 口袋智富记账应用",
-					content: "前端开发工程师：苏逸翔\n后端开发工程师：王晨宇\n项目经理/技术负责人：邵力\nUI设计师：罗松健\n测试工程师：莫桐语\n产品经理/文档工程师：汪宣彤",
+					content: "前端开发工程师：苏逸翔\n后端开发工程师：王晨宇\n项目经理/技术负责人：邵力\nUI设计师：罗松健\n测试工程师/技术负责人：莫桐语\n产品经理/文档工程师：汪宣彤",
 					cancelColor: "rgba(0,0,0,0.6)",
 					confirmColor:"#9fcba7",
 					showCancel:false
@@ -358,6 +337,10 @@
 			box-sizing: border-box;
 			padding: 0 28rpx;
 
+			.other-part {
+				margin-top: 120rpx;
+			}
+			
 			.content {
 				padding-bottom: 14px;
 

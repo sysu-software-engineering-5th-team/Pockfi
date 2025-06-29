@@ -2,8 +2,8 @@
     "name" : "Pockfi",
     "appid" : "__UNI__DE62703",
     "description" : "",
-    "versionName" : "1.1.0",
-    "versionCode" : 110,
+    "versionName" : "1.1.1",
+    "versionCode" : 111,
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,
@@ -151,7 +151,7 @@
     "uniStatistics" : {
         "enable" : false,
         "version" : "2",
-        "reportInterval" : "3600"
+        "reportInterval" : "60"
     },
     "vueVersion" : "2",
     "h5" : {
@@ -187,6 +187,11 @@
     "quickapp-webview-union" : {
         "uniStatistics" : {
             "enable" : false
+        }
+    },
+    "app-harmony" : {
+        "uniStatistics" : {
+            "enable" : true
         }
     }
 }

@@ -343,8 +343,8 @@ export default {
 	  let amount = null;
 	  if (ret.text) {
 		// 优先匹配带有货币符号或关键字的金额
-		// 关键字列表: 支付, 付款, 收款, 消费, 交易, 金额, 转账, 到账, 入账, 支出, 收入, 转入, 收到
-		let amountMatch = ret.text.match(/(?:[¥￥]|(?:支付|付款|收款|消费|交易|金额|转账|到账|入账|支出|收入|转入|收到)\s*[:：]?\s*)(\d+\.?\d*)/);
+		// 关键字列表: 支付, 付款, 收款, 消费, 交易, 金额, 转账, 到账, 入账, 支出, 收入, 转入, 收到，扣费
+		let amountMatch = ret.text.match(/(?:[¥￥]|(?:支付|付款|收款|消费|交易|金额|转账|到账|入账|支出|收入|转入|收到|扣费)\s*[:：]?\s*)(\d+\.?\d*)/);
 		
 		// 如果没有匹配到，则尝试匹配数字后面带"元"的模式
 		if (!amountMatch) {
@@ -657,7 +657,7 @@ export default {
 		}
 		console.log('[Payment] 数据来自通知栏，继续进行关键词检查');
 		// 对来自通知栏的数据，继续进行关键词检查
-		const paymentKeywords = ['支付', '收款', '付款', '转账', '收钱', '付钱', '到账', '入账', '支出', '收入'];
+		const paymentKeywords = ['支付', '收款', '付款', '转账', '收钱', '付钱', '到账', '入账', '支出', '收入','扣费'];
 		const hasPaymentKeyword = paymentKeywords.some(keyword => notification.text.includes(keyword));
 		if (hasPaymentKeyword) {
 			console.log('[Payment] 检测到支付关键词');
